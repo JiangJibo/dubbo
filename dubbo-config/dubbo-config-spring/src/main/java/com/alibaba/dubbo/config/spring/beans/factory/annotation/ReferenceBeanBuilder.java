@@ -75,6 +75,13 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
 
     }
 
+    /**
+     * 根据{@link Reference#consumer()}上的信息从Spring容器中获取相应的Bean
+     * 注入{@link ReferenceBean#consumer}中
+     *
+     * @param reference
+     * @param referenceBean
+     */
     private void configureConsumerConfig(Reference reference, ReferenceBean<?> referenceBean) {
 
         String consumerBeanName = reference.consumer();
@@ -121,7 +128,7 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
         bean.setApplicationContext(applicationContext);
         // 指定bean对应的接口
         configureInterface(annotation, bean);
-
+        //配置相应的ConsumerConfig
         configureConsumerConfig(annotation, bean);
 
         bean.afterPropertiesSet();
