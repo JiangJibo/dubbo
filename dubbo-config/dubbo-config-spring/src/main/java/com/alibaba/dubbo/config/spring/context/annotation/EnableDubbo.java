@@ -17,6 +17,7 @@
 package com.alibaba.dubbo.config.spring.context.annotation;
 
 import com.alibaba.dubbo.config.AbstractConfig;
+
 import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
@@ -40,6 +41,8 @@ import java.lang.annotation.*;
 public @interface EnableDubbo {
 
     /**
+     * 使用{@link AliasFor}将此注解上的数据映射到{@link DubboComponentScan}上
+     *
      * Base packages to scan for annotated @Service classes.
      * <p>
      * Use {@link #scanBasePackageClasses()} for a type-safe alternative to String-based
@@ -52,6 +55,8 @@ public @interface EnableDubbo {
     String[] scanBasePackages() default {};
 
     /**
+     * 使用{@link AliasFor}将此注解上的数据映射到{@link DubboComponentScan}上
+     *
      * Type-safe alternative to {@link #scanBasePackages()} for specifying the packages to
      * scan for annotated @Service classes. The package of each class specified will be
      * scanned.
@@ -62,8 +67,9 @@ public @interface EnableDubbo {
     @AliasFor(annotation = DubboComponentScan.class, attribute = "basePackageClasses")
     Class<?>[] scanBasePackageClasses() default {};
 
-
     /**
+     * 使用{@link AliasFor}将此注解上的数据映射到{@link DubboComponentScan}上
+     *
      * It indicates whether {@link AbstractConfig} binding to multiple Spring Beans.
      *
      * @return the default value is <code>false</code>

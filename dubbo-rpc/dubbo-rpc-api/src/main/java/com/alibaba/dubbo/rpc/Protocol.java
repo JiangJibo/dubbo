@@ -52,7 +52,7 @@ public interface Protocol {
      */
     /**
      * 暴露远程服务：<br>
-     * 1. 协议在接收请求时，应记录请求来源方地址信息：RpcContext.getContext().setRemoteAddress();<br>
+     * 1. 协议在接收请求时，应记录请求来源方地址信息：{@link RpcContext#getContext()#setRemoteAddress()};<br>
      * 2. export() 必须是幂等的，也就是暴露同一个 URL 的 Invoker 两次，和暴露一次没有区别。<br>
      * 3. export() 传入的 Invoker 由框架实现并传入，协议不需要关心。<br>
      *

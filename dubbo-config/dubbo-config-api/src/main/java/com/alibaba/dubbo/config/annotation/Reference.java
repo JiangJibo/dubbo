@@ -22,6 +22,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.alibaba.dubbo.config.RegistryConfig;
+
 /**
  * Reference
  *
@@ -32,12 +34,27 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Reference {
 
+    /**
+     * 接口Class
+     *
+     * @return
+     */
     Class<?> interfaceClass() default void.class;
 
+    /**
+     * 接口名称
+     *
+     * @return
+     */
     String interfaceName() default "";
 
     String version() default "";
 
+    /**
+     * 分组
+     *
+     * @return
+     */
     String group() default "";
 
     String url() default "";
@@ -110,6 +127,11 @@ public @interface Reference {
 
     String monitor() default "";
 
+    /**
+     * 注册器{@link RegistryConfig}的BeanName
+     *
+     * @return
+     */
     String[] registry() default {};
 
 }

@@ -17,9 +17,11 @@
 package com.alibaba.dubbo.config.spring.context.annotation;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.ServiceAnnotationBeanPostProcessor;
 import com.alibaba.dubbo.config.spring.util.BeanRegistrar;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -52,11 +54,15 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-
+        // 提取待扫描的包
         Set<String> packagesToScan = getPackagesToScan(importingClassMetadata);
-
+        /**
+         * 注册{@link Service}注解扫描的PostProcessor
+         */
         registerServiceAnnotationBeanPostProcessor(packagesToScan, registry);
-
+        /**
+         * 注册{@link Reference}注解扫描的PostProcessor
+         */
         registerReferenceAnnotationBeanPostProcessor(registry);
 
     }
@@ -87,13 +93,19 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
 
         // Register @Reference Annotation Bean Processor
         BeanRegistrar.registerInfrastructureBean(registry,
-                ReferenceAnnotationBeanPostProcessor.BEAN_NAME, ReferenceAnnotationBeanPostProcessor.class);
+            ReferenceAnnotationBeanPostProcessor.BEAN_NAME, ReferenceAnnotationBeanPostProcessor.class);
 
     }
 
+    /**
+     * 从{@link DubboComponentScan}注解上提取待扫描的包
+     *
+     * @param metadata
+     * @return
+     */
     private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
-                metadata.getAnnotationAttributes(DubboComponentScan.class.getName()));
+            metadata.getAnnotationAttributes(DubboComponentScan.class.getName()));
         String[] basePackages = attributes.getStringArray("basePackages");
         Class<?>[] basePackageClasses = attributes.getClassArray("basePackageClasses");
         String[] value = attributes.getStringArray("value");

@@ -17,6 +17,9 @@
 package com.alibaba.dubbo.config.spring.beans.factory.annotation;
 
 import com.alibaba.dubbo.config.*;
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.dubbo.config.spring.ReferenceBean;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
@@ -30,6 +33,7 @@ import static com.alibaba.dubbo.config.spring.util.BeanFactoryUtils.getOptionalB
 
 /**
  * Abstract Configurable {@link Annotation} Bean Builder
+ *
  * @since 2.5.7
  */
 abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B extends AbstractInterfaceConfig> {
@@ -67,6 +71,7 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
 
         checkDependencies();
 
+        // 实例化ReferenceBean
         B bean = doBuild();
 
         configureBean(bean);
@@ -90,7 +95,13 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
      */
     protected abstract B doBuild();
 
-
+    /**
+     * 根据{@link Reference}注解上的信息,从Spring容器中信息相应名称和类型的Bean
+     * 注入到{@link ReferenceBean}中
+     *
+     * @param bean
+     * @throws Exception
+     */
     protected void configureBean(B bean) throws Exception {
 
         preConfigureBean(annotation, bean);
@@ -109,17 +120,32 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
 
     protected abstract void preConfigureBean(A annotation, B bean) throws Exception;
 
-
+    /**
+     * 根据{@link Reference#registry()}上的信息从Spring容器中获取相应的注册器
+     * 注入{@link ReferenceBean#registries}中
+     *
+     * @param bean
+     */
     private void configureRegistryConfigs(B bean) {
-
+        /**
+         * 获取{@link Reference#registry()}的配置信息
+         * 配置信息指定注册器的BeanName
+         */
         String[] registryConfigBeanIds = resolveRegistryConfigBeanNames(annotation);
 
+        // 从Spring容器中获取指定名称的注册器Bean,未指定名称时为空集合
         List<RegistryConfig> registryConfigs = getBeans(applicationContext, registryConfigBeanIds, RegistryConfig.class);
 
         bean.setRegistries(registryConfigs);
 
     }
 
+    /**
+     * 根据{@link Reference#monitor()} 上的信息从Spring容器中获取相应的注册器
+     * 注入{@link ReferenceBean#monitor}中
+     *
+     * @param bean
+     */
     private void configureMonitorConfig(B bean) {
 
         String monitorBeanName = resolveMonitorConfigBeanName(annotation);
@@ -130,23 +156,33 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
 
     }
 
+    /**
+     * 根据{@link Reference#application()} 上的信息从Spring容器中获取相应的注册器
+     * 注入{@link ReferenceBean#application}中
+     *
+     * @param bean
+     */
     private void configureApplicationConfig(B bean) {
 
         String applicationConfigBeanName = resolveApplicationConfigBeanName(annotation);
 
-        ApplicationConfig applicationConfig =
-                getOptionalBean(applicationContext, applicationConfigBeanName, ApplicationConfig.class);
+        ApplicationConfig applicationConfig = getOptionalBean(applicationContext, applicationConfigBeanName, ApplicationConfig.class);
 
         bean.setApplication(applicationConfig);
 
     }
 
+    /**
+     * 根据{@link Reference#module()} 上的信息从Spring容器中获取相应的注册器
+     * 注入{@link ReferenceBean#module}中
+     *
+     * @param bean
+     */
     private void configureModuleConfig(B bean) {
 
         String moduleConfigBeanName = resolveModuleConfigBeanName(annotation);
 
-        ModuleConfig moduleConfig =
-                getOptionalBean(applicationContext, moduleConfigBeanName, ModuleConfig.class);
+        ModuleConfig moduleConfig = getOptionalBean(applicationContext, moduleConfigBeanName, ModuleConfig.class);
 
         bean.setModule(moduleConfig);
 
@@ -167,7 +203,6 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
      * @return
      */
     protected abstract String resolveApplicationConfigBeanName(A annotation);
-
 
     /**
      * Resolves the bean ids of {@link com.alibaba.dubbo.config.RegistryConfig}
@@ -193,15 +228,14 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
      */
     protected abstract void postConfigureBean(A annotation, B bean) throws Exception;
 
-
     public <T extends AbstractAnnotationConfigBeanBuilder<A, B>> T bean(Object bean) {
         this.bean = bean;
-        return (T) this;
+        return (T)this;
     }
 
     public <T extends AbstractAnnotationConfigBeanBuilder<A, B>> T interfaceClass(Class<?> interfaceClass) {
         this.interfaceClass = interfaceClass;
-        return (T) this;
+        return (T)this;
     }
 
 }

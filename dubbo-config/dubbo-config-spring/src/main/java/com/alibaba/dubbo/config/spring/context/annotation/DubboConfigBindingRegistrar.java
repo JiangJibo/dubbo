@@ -18,6 +18,7 @@ package com.alibaba.dubbo.config.spring.context.annotation;
 
 import com.alibaba.dubbo.config.AbstractConfig;
 import com.alibaba.dubbo.config.spring.beans.factory.annotation.DubboConfigBindingBeanPostProcessor;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.MutablePropertyValues;
@@ -35,6 +36,7 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.DataBinder;
 
 import java.util.*;
 
@@ -59,12 +61,20 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
-                importingClassMetadata.getAnnotationAttributes(EnableDubboConfigBinding.class.getName()));
+            importingClassMetadata.getAnnotationAttributes(EnableDubboConfigBinding.class.getName()));
 
         registerBeanDefinitions(attributes, registry);
 
     }
 
+    /**
+     * 搜索所有properties内指定的前缀的配置信息，
+     * 然后实例化{@link EnableDubboConfigBinding#type()}指定Class的一个对象
+     * 最后将配置信息去除{@link EnableDubboConfigBinding#prefix()}前缀,将相应的值通过setter方法赋值给配置对象
+     *
+     * @param attributes
+     * @param registry
+     */
     protected void registerBeanDefinitions(AnnotationAttributes attributes, BeanDefinitionRegistry registry) {
 
         String prefix = environment.resolvePlaceholders(attributes.getString("prefix"));
@@ -83,19 +93,19 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
                                           BeanDefinitionRegistry registry) {
 
         PropertySources propertySources = environment.getPropertySources();
-
+        // 获取Spring内所有Properties的以指定前缀开始的配置信息，抹去prefix
         Map<String, String> properties = getSubProperties(propertySources, prefix);
 
         if (CollectionUtils.isEmpty(properties)) {
             if (log.isDebugEnabled()) {
                 log.debug("There is no property for binding to dubbo config class [" + configClass.getName()
-                        + "] within prefix [" + prefix + "]");
+                    + "] within prefix [" + prefix + "]");
             }
             return;
         }
-
+        // 提取配置Bean的名称,如果是single模式则只有一个BeanName;如果是multi模式,则有多个
         Set<String> beanNames = multiple ? resolveMultipleBeanNames(prefix, properties) :
-                Collections.singleton(resolveSingleBeanName(configClass, properties, registry));
+            Collections.singleton(resolveSingleBeanName(configClass, properties, registry));
 
         for (String beanName : beanNames) {
 
@@ -109,6 +119,13 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
     }
 
+    /**
+     * 向Spring容器内注册Dubbo相应的Config Bean
+     *
+     * @param beanName
+     * @param configClass
+     * @param registry
+     */
     private void registerDubboConfigBean(String beanName, Class<? extends AbstractConfig> configClass,
                                          BeanDefinitionRegistry registry) {
 
@@ -120,11 +137,20 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
         if (log.isInfoEnabled()) {
             log.info("The dubbo config bean definition [name : " + beanName + ", class : " + configClass.getName() +
-                    "] has been registered.");
+                "] has been registered.");
         }
 
     }
 
+    /**
+     * 为每一个配置Bean实例化一个{@link DubboConfigBindingBeanPostProcessor},指定其实例化构造函数的参数
+     * 在其{@link DubboConfigBindingBeanPostProcessor#postProcessAfterInitialization(Object, String)}
+     * 中将 propertyValues 内的所有数据使用{@link DataBinder}填充入配置Bean中
+     *
+     * @param beanName
+     * @param propertyValues
+     * @param registry
+     */
     private void registerDubboConfigBindingBeanPostProcessor(String beanName, PropertyValues propertyValues,
                                                              BeanDefinitionRegistry registry) {
 
@@ -142,11 +168,19 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
         if (log.isInfoEnabled()) {
             log.info("The BeanPostProcessor bean definition [" + processorClass.getName()
-                    + "] for dubbo config bean [name : " + beanName + "] has been registered.");
+                + "] for dubbo config bean [name : " + beanName + "] has been registered.");
         }
 
     }
 
+    /**
+     * 将所有配置信息合并成一个{@link MutablePropertyValues}
+     *
+     * @param beanName
+     * @param multiple
+     * @param properties
+     * @return
+     */
     private MutablePropertyValues resolveBeanPropertyValues(String beanName, boolean multiple,
                                                             Map<String, String> properties) {
 
@@ -160,7 +194,6 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
             Map<String, String> subProperties = getSubProperties(propertySources, beanName);
 
             propertyValues.addPropertyValues(subProperties);
-
 
         } else { // For Single Bean
 
@@ -182,7 +215,7 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
         Assert.isInstanceOf(ConfigurableEnvironment.class, environment);
 
-        this.environment = (ConfigurableEnvironment) environment;
+        this.environment = (ConfigurableEnvironment)environment;
 
     }
 
@@ -207,6 +240,16 @@ public class DubboConfigBindingRegistrar implements ImportBeanDefinitionRegistra
 
     }
 
+    /**
+     * 解析相应的配置Bean的名称
+     * 如果 prefix+"id" 的配置项不为空,则已经指定好了Bean的名称
+     * 不需要通过{@link BeanDefinitionReaderUtils#generateBeanName(BeanDefinition, BeanDefinitionRegistry)}生成BeanName了
+     *
+     * @param configClass
+     * @param properties
+     * @param registry
+     * @return
+     */
     private String resolveSingleBeanName(Class<? extends AbstractConfig> configClass, Map<String, String> properties,
                                          BeanDefinitionRegistry registry) {
 

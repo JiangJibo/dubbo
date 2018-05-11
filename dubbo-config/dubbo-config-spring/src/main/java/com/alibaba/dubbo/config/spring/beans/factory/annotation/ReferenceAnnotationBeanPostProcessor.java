@@ -18,6 +18,7 @@ package com.alibaba.dubbo.config.spring.beans.factory.annotation;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.spring.ReferenceBean;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
@@ -26,6 +27,7 @@ import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
@@ -53,14 +55,16 @@ import static org.springframework.core.annotation.AnnotationUtils.findAnnotation
 import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
 
 /**
+ * {@link Reference}类似{@link Autowired},可以标识在注解上,也可以标识在方法上
+ *
  * {@link org.springframework.beans.factory.config.BeanPostProcessor} implementation
  * that Consumer service {@link Reference} annotated fields
  *
  * @since 2.5.7
  */
 public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter
-        implements MergedBeanDefinitionPostProcessor, PriorityOrdered, ApplicationContextAware, BeanClassLoaderAware,
-        DisposableBean {
+    implements MergedBeanDefinitionPostProcessor, PriorityOrdered, ApplicationContextAware, BeanClassLoaderAware,
+    DisposableBean {
 
     /**
      * The bean name of {@link ReferenceAnnotationBeanPostProcessor}
@@ -74,14 +78,14 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
     private ClassLoader classLoader;
 
     private final ConcurrentMap<String, InjectionMetadata> injectionMetadataCache =
-            new ConcurrentHashMap<String, InjectionMetadata>(256);
+        new ConcurrentHashMap<String, InjectionMetadata>(256);
 
     private final ConcurrentMap<String, ReferenceBean<?>> referenceBeansCache =
-            new ConcurrentHashMap<String, ReferenceBean<?>>();
+        new ConcurrentHashMap<String, ReferenceBean<?>>();
 
     @Override
     public PropertyValues postProcessPropertyValues(
-            PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
+        PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
 
         InjectionMetadata metadata = findReferenceMetadata(beanName, bean.getClass(), pvs);
         try {
@@ -93,7 +97,6 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
         }
         return pvs;
     }
-
 
     /**
      * Finds {@link InjectionMetadata.InjectedElement} Metadata from annotated {@link Reference @Reference} fields
@@ -162,7 +165,7 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
                     if (method.getParameterTypes().length == 0) {
                         if (logger.isWarnEnabled()) {
                             logger.warn("@Reference  annotation should only be used on methods with parameters: " +
-                                    method);
+                                method);
                         }
                     }
                     PropertyDescriptor pd = BeanUtils.findPropertyForMethod(bridgedMethod, beanClass);
@@ -175,8 +178,9 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
 
     }
 
-
     /**
+     * {@link Reference}类似{@link Autowired},可以标识在注解上,也可以标识在方法上
+     *
      * @param beanClass
      * @return
      */
@@ -209,7 +213,7 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
                         this.injectionMetadataCache.put(cacheKey, metadata);
                     } catch (NoClassDefFoundError err) {
                         throw new IllegalStateException("Failed to introspect bean class [" + clazz.getName() +
-                                "] for reference metadata: could not find class that it depends on", err);
+                            "] for reference metadata: could not find class that it depends on", err);
                     }
                 }
             }
@@ -258,7 +262,6 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
-
 
     /**
      * Gets all beans of {@link ReferenceBean}
@@ -330,28 +333,38 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
 
     }
 
+    /**
+     * 通过{@link Reference}注解和待注入属性的Class,通过动态代理生成注入对象
+     *
+     * @param reference
+     * @param referenceClass
+     * @return
+     * @throws Exception
+     */
     private Object buildReferenceBean(Reference reference, Class<?> referenceClass) throws Exception {
-
+        // key的名称结构：com.bob.dubbo.CityService:1.0.0,   group不存在的话
         String referenceBeanCacheKey = generateReferenceBeanCacheKey(reference, referenceClass);
 
         ReferenceBean<?> referenceBean = referenceBeansCache.get(referenceBeanCacheKey);
 
         if (referenceBean == null) {
-
-            ReferenceBeanBuilder beanBuilder = ReferenceBeanBuilder
-                    .create(reference, classLoader, applicationContext)
-                    .interfaceClass(referenceClass);
-
+            /**
+             * 创建{@link ReferenceBean}的构造器
+             */
+            ReferenceBeanBuilder beanBuilder = ReferenceBeanBuilder.create(reference, classLoader, applicationContext).interfaceClass(referenceClass);
+            /**
+             * 生成{@link ReferenceBean}对象
+             */
             referenceBean = beanBuilder.build();
 
             referenceBeansCache.putIfAbsent(referenceBeanCacheKey, referenceBean);
 
         }
-
-
+        /**
+         * 返回{@link ReferenceBean}内部的{@link ReferenceBean#ref}
+         */
         return referenceBean.get();
     }
-
 
     /**
      * Generate a cache key of {@link ReferenceBean}
@@ -363,7 +376,7 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
     private static String generateReferenceBeanCacheKey(Reference reference, Class<?> beanClass) {
 
         String interfaceName = resolveInterfaceName(reference, beanClass);
-
+        // key的名称结构：com.bob.dubbo.CityService:1.0.0,   group不存在的话
         String key = reference.group() + "/" + interfaceName + ":" + reference.version();
 
         return key;
@@ -371,7 +384,7 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
     }
 
     private static String resolveInterfaceName(Reference reference, Class<?> beanClass)
-            throws IllegalStateException {
+        throws IllegalStateException {
 
         String interfaceName;
         if (!"".equals(reference.interfaceName())) {
@@ -382,8 +395,8 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
             interfaceName = beanClass.getName();
         } else {
             throw new IllegalStateException(
-                    "The @Reference undefined interfaceClass or interfaceName, and the property type "
-                            + beanClass.getName() + " is not a interface.");
+                "The @Reference undefined interfaceClass or interfaceName, and the property type "
+                    + beanClass.getName() + " is not a interface.");
         }
 
         return interfaceName;

@@ -41,6 +41,8 @@ public interface Router extends Comparable<Router> {
     URL getUrl();
 
     /**
+     * 从所有的服务提供者中，筛选出符合要求的
+     * 之后就可以通过{@link Cluster}将其封装成一个{@link Invoker},对外提供负载均衡机制
      * route.
      *
      * @param invokers

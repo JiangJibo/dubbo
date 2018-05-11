@@ -19,6 +19,7 @@ package com.alibaba.dubbo.config.spring.beans.factory.annotation;
 import com.alibaba.dubbo.config.ConsumerConfig;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.spring.ReferenceBean;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -33,11 +34,18 @@ import static com.alibaba.dubbo.config.spring.util.BeanFactoryUtils.getOptionalB
  */
 class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference, ReferenceBean> {
 
-
     private ReferenceBeanBuilder(Reference annotation, ClassLoader classLoader, ApplicationContext applicationContext) {
         super(annotation, classLoader, applicationContext);
     }
 
+    /**
+     * 为{@link ReferenceBean#interfaceClass}赋值
+     * 优先使用{@link Reference}注解上的interface相关信息
+     * 未指定时使用{@link #interfaceClass}
+     *
+     * @param reference
+     * @param referenceBean
+     */
     private void configureInterface(Reference reference, ReferenceBean referenceBean) {
 
         Class<?> interfaceClass = reference.interfaceClass();
@@ -61,12 +69,11 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
         }
 
         Assert.isTrue(interfaceClass.isInterface(),
-                "The class of field or method that was annotated @Reference is not an interface!");
+            "The class of field or method that was annotated @Reference is not an interface!");
 
         referenceBean.setInterface(interfaceClass);
 
     }
-
 
     private void configureConsumerConfig(Reference reference, ReferenceBean<?> referenceBean) {
 
@@ -112,7 +119,7 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
     protected void postConfigureBean(Reference annotation, ReferenceBean bean) throws Exception {
 
         bean.setApplicationContext(applicationContext);
-
+        // 指定bean对应的接口
         configureInterface(annotation, bean);
 
         configureConsumerConfig(annotation, bean);

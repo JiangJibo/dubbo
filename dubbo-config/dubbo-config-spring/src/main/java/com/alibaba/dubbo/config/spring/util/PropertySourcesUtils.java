@@ -33,6 +33,7 @@ import java.util.Properties;
 public abstract class PropertySourcesUtils {
 
     /**
+     * 获取所有Properties内以指定前缀开始的配置信息，会截断prefix
      * Get Sub {@link Properties}
      *
      * @param propertySources {@link PropertySources}
@@ -48,7 +49,7 @@ public abstract class PropertySourcesUtils {
 
         for (PropertySource<?> source : propertySources) {
             if (source instanceof EnumerablePropertySource) {
-                for (String name : ((EnumerablePropertySource<?>) source).getPropertyNames()) {
+                for (String name : ((EnumerablePropertySource<?>)source).getPropertyNames()) {
                     if (name.startsWith(normalizedPrefix)) {
                         String subName = name.substring(normalizedPrefix.length());
                         Object value = source.getProperty(name);

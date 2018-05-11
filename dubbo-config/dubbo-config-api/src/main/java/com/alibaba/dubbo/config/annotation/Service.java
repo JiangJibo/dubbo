@@ -34,10 +34,25 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface Service {
 
+    /**
+     * 接口的Class，未指定则默认为实现的第一个接口
+     *
+     * @return
+     */
     Class<?> interfaceClass() default void.class;
 
+    /**
+     * 接口的全名
+     *
+     * @return
+     */
     String interfaceName() default "";
 
+    /**
+     * 版本
+     *
+     * @return
+     */
     String version() default "";
 
     String group() default "";
@@ -62,6 +77,11 @@ public @interface Service {
 
     String document() default "";
 
+    /**
+     * 延迟级别
+     *
+     * @return
+     */
     int delay() default 0;
 
     String local() default "";
