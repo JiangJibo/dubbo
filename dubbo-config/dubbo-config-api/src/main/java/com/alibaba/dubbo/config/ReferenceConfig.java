@@ -482,9 +482,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         }
                     }
                 }
-                // 注册中心
-            } else { // assemble URL from register center's configuration
-                // 加载注册中心 URL 数组
+
+            } else {
+                // assemble URL from register center's configuration
+                // 加载注册中心 URL 数组,如果指定了多个注册中心,那么就会返回多个URL
                 List<URL> us = loadRegistries(false);
                 // 循环数组，添加到 `url` 中。
                 if (us != null && !us.isEmpty()) {
@@ -527,11 +528,11 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     // 对有注册中心的 Cluster 只用 AvailableCluster
                     // use AvailableCluster only when register's cluster is available
                     URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME);
-                    // TODO 芋艿
+                    // 将多个invoker组合成一个集群式的invker，以便负载均衡
                     invoker = cluster.join(new StaticDirectory(u, invokers));
                     // 无注册中心
                 } else { // not a registry url
-                    // TODO 芋艿
+                    // // 将多个invoker组合成一个集群式的invker，以便负载均衡
                     invoker = cluster.join(new StaticDirectory(invokers));
                 }
             }

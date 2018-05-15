@@ -142,6 +142,7 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
                 }
             }
         }
+
         if ((getRegistries() == null || getRegistries().isEmpty())
             && (getConsumer() == null || getConsumer().getRegistries() == null || getConsumer().getRegistries().isEmpty())
             && (getApplication() == null || getApplication().getRegistries() == null || getApplication().getRegistries().isEmpty())) {
@@ -150,6 +151,7 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
             if (registryConfigMap != null && registryConfigMap.size() > 0) {
                 List<RegistryConfig> registryConfigs = new ArrayList<RegistryConfig>();
                 for (RegistryConfig config : registryConfigMap.values()) {
+                    // 注册器可以有多个
                     if (config.isDefault() == null || config.isDefault().booleanValue()) {
                         registryConfigs.add(config);
                     }
@@ -167,6 +169,7 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
             if (monitorConfigMap != null && monitorConfigMap.size() > 0) {
                 MonitorConfig monitorConfig = null;
                 for (MonitorConfig config : monitorConfigMap.values()) {
+                    // 若未找到Default配置Bean,那么有多个配置Bean时会报错,因为不知道选择哪个
                     if (config.isDefault() == null || config.isDefault().booleanValue()) {
                         if (monitorConfig != null) {
                             throw new IllegalStateException("Duplicate monitor configs: " + monitorConfig + " and " + config);
