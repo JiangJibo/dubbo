@@ -52,6 +52,11 @@ public @interface Reference {
      */
     String interfaceName() default "";
 
+    /**
+     * 版本号
+     *
+     * @return
+     */
     String version() default "";
 
     /**
@@ -72,10 +77,25 @@ public @interface Reference {
      */
     boolean generic() default false;
 
+    /**
+     * 是否是JVM内部的调用
+     *
+     * @return
+     */
     boolean injvm() default false;
 
+    /**
+     * 是否校验过
+     *
+     * @return
+     */
     boolean check() default true;
 
+    /**
+     * 是否初始化过
+     *
+     * @return
+     */
     boolean init() default false;
 
     boolean lazy() default false;
@@ -104,10 +124,20 @@ public @interface Reference {
 
     String layer() default "";
 
+    /**
+     * 重试次数
+     *
+     * @return
+     */
     int retries() default 0;
 
     String loadbalance() default "";
 
+    /**
+     * 是否异步
+     *
+     * @return
+     */
     boolean async() default false;
 
     int actives() default 0;
@@ -118,6 +148,11 @@ public @interface Reference {
 
     String validation() default "";
 
+    /**
+     * 超时时间
+     *
+     * @return
+     */
     int timeout() default 0;
 
     String cache() default "";
