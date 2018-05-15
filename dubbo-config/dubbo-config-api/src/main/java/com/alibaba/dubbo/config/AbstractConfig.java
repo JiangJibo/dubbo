@@ -154,7 +154,7 @@ public abstract class AbstractConfig implements Serializable {
                     String value = null;
                     if (config.getId() != null && config.getId().length() > 0) {
                         String pn = prefix + config.getId() + "." + property; // 带有 `Config#id`
-                        value = System.getProperty(pn);
+                        value = System.getProperty(pn);                       // 获取System指定名称的property
                         if (!StringUtils.isBlank(value)) {
                             logger.info("Use System Property " + pn + " to config dubbo");
                         }

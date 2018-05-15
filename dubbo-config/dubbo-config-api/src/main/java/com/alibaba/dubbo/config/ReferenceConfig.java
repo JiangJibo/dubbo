@@ -156,8 +156,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
      * 检查属性集合中的事件通知方法是否正确。
      * 因为，此时方法配置的是字符串，需要通过反射获得 Method ，并添加到 attributes 。其中，键为 {@link StaticContext#getKey(Map, String, String)} 方法获取。
      *
-     * @param method 方法配置对象
-     * @param map 参数集合
+     * @param method     方法配置对象
+     * @param map        参数集合
      * @param attributes 属性集合
      */
     private static void checkAndConvertImplicitConfig(MethodConfig method, Map<String, String> map, Map<Object, Object> attributes) {
@@ -243,10 +243,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (interfaceName == null || interfaceName.length() == 0) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
         }
-        // 拼接属性配置（环境变量 + properties 属性）到 ConsumerConfig 对象
+        // 提取属性配置（环境变量 或 properties 属性）到 ConsumerConfig 对象
         // get consumer's global configuration
         checkDefault();
-        // 拼接属性配置（环境变量 + properties 属性）到 ReferenceConfig 对象
+        // 提取属性配置（环境变量 + properties 属性）到 ReferenceConfig 对象
         appendProperties(this);
         // 若未设置 `generic` 属性，使用 `ConsumerConfig.generic` 属性。
         if (getGeneric() == null && getConsumer() != null) {
@@ -255,7 +255,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         // 泛化接口的实现
         if (ProtocolUtils.isGeneric(getGeneric())) {
             interfaceClass = GenericService.class;
-        // 普通接口的实现
+            // 普通接口的实现
         } else {
             try {
                 interfaceClass = Class.forName(interfaceName, true, Thread.currentThread().getContextClassLoader());
@@ -290,7 +290,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     throw new IllegalStateException("Unload " + resolveFile + ", cause: " + e.getMessage(), e);
                 } finally {
                     try {
-                        if (null != fis) fis.close();
+                        if (null != fis) { fis.close(); }
                     } catch (IOException e) {
                         logger.warn(e.getMessage(), e);
                     }
@@ -303,7 +303,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             url = resolve;
             if (logger.isWarnEnabled()) {
                 if (resolveFile != null && resolveFile.length() > 0) {
-                    logger.warn("Using default dubbo resolve file " + resolveFile + " replace " + interfaceName + "" + resolve + " to p2p invoke remote service.");
+                    logger.warn(
+                        "Using default dubbo resolve file " + resolveFile + " replace " + interfaceName + "" + resolve + " to p2p invoke remote service.");
                 } else {
                     logger.warn("Using -D" + interfaceName + "=" + resolve + " to p2p invoke remote service.");
                 }
@@ -435,15 +436,15 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             // 直连服务提供者，参见文档《直连提供者》https://dubbo.gitbooks.io/dubbo-user-book/demos/explicit-target.html
             if (url != null && url.length() > 0) { // if a url is specified, don't do local reference
                 isJvmRefer = false;
-            // 通过 `tmpUrl` 判断，是否需要本地引用
+                // 通过 `tmpUrl` 判断，是否需要本地引用
             } else if (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) {
                 // by default, reference local service if there is
                 isJvmRefer = true;
-            // 默认不是
+                // 默认不是
             } else {
                 isJvmRefer = false;
             }
-        // 通过 injvm 属性。
+            // 通过 injvm 属性。
         } else {
             isJvmRefer = isInjvm();
         }
@@ -457,7 +458,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
-        // 正常流程，一般为远程引用
+            // 正常流程，一般为远程引用
         } else {
             // 定义直连地址，可以是服务提供者的地址，也可以是注册中心的地址
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
@@ -475,13 +476,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         // 注册中心的地址，带上服务引用的配置参数
                         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                             urls.add(url.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));
-                        // 服务提供者的地址
+                            // 服务提供者的地址
                         } else {
                             urls.add(ClusterUtils.mergeUrl(url, map));
                         }
                     }
                 }
-            // 注册中心
+                // 注册中心
             } else { // assemble URL from register center's configuration
                 // 加载注册中心 URL 数组
                 List<URL> us = loadRegistries(false);
@@ -499,7 +500,9 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     }
                 }
                 if (urls == null || urls.isEmpty()) {
-                    throw new IllegalStateException("No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
+                    throw new IllegalStateException(
+                        "No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version
+                            .getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
                 }
             }
 
@@ -526,7 +529,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME);
                     // TODO 芋艿
                     invoker = cluster.join(new StaticDirectory(u, invokers));
-                // 无注册中心
+                    // 无注册中心
                 } else { // not a registry url
                     // TODO 芋艿
                     invoker = cluster.join(new StaticDirectory(invokers));
@@ -543,7 +546,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             c = true; // default true
         }
         if (c && !invoker.isAvailable()) {
-            throw new IllegalStateException("Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/") + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl() + " to the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
+            throw new IllegalStateException(
+                "Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/")
+                    + interfaceName + (version == null ? "" : ":" + version) + " from the url " + invoker.getUrl() + " to the consumer " + NetUtils
+                    .getLocalHost() + " use dubbo version " + Version.getVersion());
         }
         if (logger.isInfoEnabled()) {
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
@@ -551,12 +557,12 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
         // 创建 Service 代理对象
         // create service proxy
-        return (T) proxyFactory.getProxy(invoker);
+        return (T)proxyFactory.getProxy(invoker);
     }
 
     /**
      * 校验 ConsumerConfig 配置。
-     * 实际上，会拼接属性配置（环境变量 + properties 属性）到 ConsumerConfig 对象。
+     * 实际上，会追加属性配置{@link System#getenv(String)}  {@link System#getProperty(String)} 到 ConsumerConfig 对象。
      */
     private void checkDefault() {
         if (consumer == null) {
@@ -570,13 +576,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             return interfaceClass;
         }
         if (isGeneric()
-                || (getConsumer() != null && getConsumer().isGeneric())) {
+            || (getConsumer() != null && getConsumer().isGeneric())) {
             return GenericService.class;
         }
         try {
             if (interfaceName != null && interfaceName.length() > 0) {
                 this.interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
-                        .getContextClassLoader());
+                    .getContextClassLoader());
             }
         } catch (ClassNotFoundException t) {
             throw new IllegalStateException(t.getMessage(), t);
@@ -637,7 +643,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     @SuppressWarnings("unchecked")
     public void setMethods(List<? extends MethodConfig> methods) {
-        this.methods = (List<MethodConfig>) methods;
+        this.methods = (List<MethodConfig>)methods;
     }
 
     public ConsumerConfig getConsumer() {

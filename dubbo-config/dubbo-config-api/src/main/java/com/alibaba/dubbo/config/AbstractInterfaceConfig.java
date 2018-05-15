@@ -171,7 +171,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             throw new IllegalStateException(
                     "No such application config! Please add <dubbo:application name=\"...\" /> to your spring config.");
         }
-        // 读取环境变量和 properties 配置到 ApplicationConfig 对象。
+        // 提取环境变量和 properties 配置到 ApplicationConfig 对象。
         appendProperties(application);
 
         // 初始化优雅停机的超时时长，参见 http://dubbo.io/books/dubbo-user-book/demos/graceful-shutdown.html 文档。
