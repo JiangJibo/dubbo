@@ -533,6 +533,7 @@ public abstract class AbstractConfig implements Serializable {
                         // 适配setter方法的参数类型和值的类型
                         if ("filter".equals(property) || "listener".equals(property)) {
                             parameterType = String.class;
+                            // 把String数组用 "," 拼接成一个String
                             value = StringUtils.join((String[])value, ",");
                         } else if ("parameters".equals(property)) {
                             parameterType = Map.class;

@@ -22,6 +22,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.alibaba.dubbo.config.ApplicationConfig;
+import com.alibaba.dubbo.config.ConsumerConfig;
+import com.alibaba.dubbo.config.ModuleConfig;
+import com.alibaba.dubbo.config.MonitorConfig;
 import com.alibaba.dubbo.config.RegistryConfig;
 
 /**
@@ -61,6 +65,11 @@ public @interface Reference {
 
     String client() default "";
 
+    /**
+     * 是否使用泛型
+     *
+     * @return
+     */
     boolean generic() default false;
 
     boolean injvm() default false;
@@ -119,12 +128,32 @@ public @interface Reference {
 
     String[] parameters() default {};
 
+    /**
+     * 应用{@link ApplicationConfig}的BeanName
+     *
+     * @return
+     */
     String application() default "";
 
+    /**
+     * 模块{@link ModuleConfig}的BeanName
+     *
+     * @return
+     */
     String module() default "";
 
+    /**
+     * 消费者{@link ConsumerConfig}的BeanName
+     *
+     * @return
+     */
     String consumer() default "";
 
+    /**
+     * 监视器{@link MonitorConfig}的BeanName
+     *
+     * @return
+     */
     String monitor() default "";
 
     /**
