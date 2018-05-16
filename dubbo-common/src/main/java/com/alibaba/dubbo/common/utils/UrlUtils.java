@@ -35,7 +35,7 @@ public class UrlUtils {
      * 我们可以把 `address` 认为是 url ；`defaults` 认为是 defaultURL 。
      * 若 url 有不存在的属性时，从 defaultURL 获得对应的属性，设置到 url 中。
      *
-     * @param address 地址
+     * @param address  地址
      * @param defaults 默认参数集合
      * @return URL
      */
@@ -152,15 +152,15 @@ public class UrlUtils {
      * 我们可以把 `address` 认为是 url ；`defaults` 认为是 defaultURL 。
      * 若 url 有不存在的属性时，从 defaultURL 获得对应的属性，设置到 url 中。
      *
-     * @param address 地址
+     * @param address  地址
      * @param defaults 默认参数集合
      * @return URL
      */
     public static List<URL> parseURLs(String address, Map<String, String> defaults) {
-        // 拆分注册中心地址，按照逗号或者分号。
         if (address == null || address.length() == 0) {
             return null;
         }
+        // 拆分注册中心地址，按照逗号或者分号。
         String[] addresses = Constants.REGISTRY_SPLIT_PATTERN.split(address);
         if (addresses == null || addresses.length == 0) {
             return null; //here won't be empty
@@ -377,9 +377,9 @@ public class UrlUtils {
             service = service.substring(0, i);
         }
         return URL.valueOf(Constants.EMPTY_PROTOCOL + "://0.0.0.0/" + service + "?"
-                + Constants.CATEGORY_KEY + "=" + category
-                + (group == null ? "" : "&" + Constants.GROUP_KEY + "=" + group)
-                + (version == null ? "" : "&" + Constants.VERSION_KEY + "=" + version));
+            + Constants.CATEGORY_KEY + "=" + category
+            + (group == null ? "" : "&" + Constants.GROUP_KEY + "=" + group)
+            + (version == null ? "" : "&" + Constants.VERSION_KEY + "=" + version));
     }
 
     public static boolean isMatchCategory(String category, String categories) {
@@ -397,15 +397,14 @@ public class UrlUtils {
     public static boolean isMatch(URL consumerUrl, URL providerUrl) {
         String consumerInterface = consumerUrl.getServiceInterface();
         String providerInterface = providerUrl.getServiceInterface();
-        if (!(Constants.ANY_VALUE.equals(consumerInterface) || StringUtils.isEquals(consumerInterface, providerInterface)))
-            return false;
+        if (!(Constants.ANY_VALUE.equals(consumerInterface) || StringUtils.isEquals(consumerInterface, providerInterface))) { return false; }
 
         if (!isMatchCategory(providerUrl.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY),
-                consumerUrl.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY))) {
+            consumerUrl.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY))) {
             return false;
         }
         if (!providerUrl.getParameter(Constants.ENABLED_KEY, true)
-                && !Constants.ANY_VALUE.equals(consumerUrl.getParameter(Constants.ENABLED_KEY))) {
+            && !Constants.ANY_VALUE.equals(consumerUrl.getParameter(Constants.ENABLED_KEY))) {
             return false;
         }
 
@@ -416,9 +415,10 @@ public class UrlUtils {
         String providerGroup = providerUrl.getParameter(Constants.GROUP_KEY);
         String providerVersion = providerUrl.getParameter(Constants.VERSION_KEY);
         String providerClassifier = providerUrl.getParameter(Constants.CLASSIFIER_KEY, Constants.ANY_VALUE);
-        return (Constants.ANY_VALUE.equals(consumerGroup) || StringUtils.isEquals(consumerGroup, providerGroup) || StringUtils.isContains(consumerGroup, providerGroup))
-                && (Constants.ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion))
-                && (consumerClassifier == null || Constants.ANY_VALUE.equals(consumerClassifier) || StringUtils.isEquals(consumerClassifier, providerClassifier));
+        return (Constants.ANY_VALUE.equals(consumerGroup) || StringUtils.isEquals(consumerGroup, providerGroup) || StringUtils.isContains(consumerGroup,
+            providerGroup))
+            && (Constants.ANY_VALUE.equals(consumerVersion) || StringUtils.isEquals(consumerVersion, providerVersion))
+            && (consumerClassifier == null || Constants.ANY_VALUE.equals(consumerClassifier) || StringUtils.isEquals(consumerClassifier, providerClassifier));
     }
 
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
@@ -429,14 +429,11 @@ public class UrlUtils {
     }
 
     public static boolean isMatchGlobPattern(String pattern, String value) {
-        if ("*".equals(pattern))
-            return true;
+        if ("*".equals(pattern)) { return true; }
         if ((pattern == null || pattern.length() == 0)
-                && (value == null || value.length() == 0))
-            return true;
+            && (value == null || value.length() == 0)) { return true; }
         if ((pattern == null || pattern.length() == 0)
-                || (value == null || value.length() == 0))
-            return false;
+            || (value == null || value.length() == 0)) { return false; }
 
         int i = pattern.lastIndexOf('*');
         // doesn't find "*"
@@ -463,16 +460,16 @@ public class UrlUtils {
      * 判断服务键是否匹配
      *
      * @param pattern 匹配 URL
-     * @param value 被匹配 URL
+     * @param value   被匹配 URL
      * @return 是否
      */
     public static boolean isServiceKeyMatch(URL pattern, URL value) {
-                // interface
+        // interface
         return pattern.getParameter(Constants.INTERFACE_KEY).equals(value.getParameter(Constants.INTERFACE_KEY))
-                // group
-                && isItemMatch(pattern.getParameter(Constants.GROUP_KEY), value.getParameter(Constants.GROUP_KEY))
-                // version
-                && isItemMatch(pattern.getParameter(Constants.VERSION_KEY), value.getParameter(Constants.VERSION_KEY));
+            // group
+            && isItemMatch(pattern.getParameter(Constants.GROUP_KEY), value.getParameter(Constants.GROUP_KEY))
+            // version
+            && isItemMatch(pattern.getParameter(Constants.VERSION_KEY), value.getParameter(Constants.VERSION_KEY));
     }
 
     /**

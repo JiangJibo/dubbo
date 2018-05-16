@@ -135,7 +135,7 @@ public final class URL implements Serializable {
     }
 
     public URL(String protocol, String host, int port) {
-        this(protocol, null, null, host, port, null, (Map<String, String>) null);
+        this(protocol, null, null, host, port, null, (Map<String, String>)null);
     }
 
     public URL(String protocol, String host, int port, String[] pairs) { // varargs ... confilict with the following path argument, use array instead.
@@ -147,7 +147,7 @@ public final class URL implements Serializable {
     }
 
     public URL(String protocol, String host, int port, String path) {
-        this(protocol, null, null, host, port, path, (Map<String, String>) null);
+        this(protocol, null, null, host, port, path, (Map<String, String>)null);
     }
 
     public URL(String protocol, String host, int port, String path, String... pairs) {
@@ -159,7 +159,7 @@ public final class URL implements Serializable {
     }
 
     public URL(String protocol, String username, String password, String host, int port, String path) {
-        this(protocol, username, password, host, port, path, (Map<String, String>) null);
+        this(protocol, username, password, host, port, path, (Map<String, String>)null);
     }
 
     public URL(String protocol, String username, String password, String host, int port, String path, String... pairs) {
@@ -168,7 +168,7 @@ public final class URL implements Serializable {
 
     public URL(String protocol, String username, String password, String host, int port, String path, Map<String, String> parameters) {
         if ((username == null || username.length() == 0)
-                && password != null && password.length() > 0) {
+            && password != null && password.length() > 0) {
             throw new IllegalArgumentException("Invalid url, password without username!");
         }
         this.protocol = protocol;
@@ -191,6 +191,7 @@ public final class URL implements Serializable {
 
     /**
      * Parse url string
+     * 解析 dubbo.registry.address=zookeeper://lanboal:123456@127.0.0.1:2181?sercicecheck=false 指定的值
      *
      * @param url URL string
      * @return URL instance
@@ -207,8 +208,8 @@ public final class URL implements Serializable {
         int port = 0;
         String path = null;
         Map<String, String> parameters = null;
-        int i = url.indexOf("?"); // seperator between body and parameters 
-        if (i >= 0) {
+        int i = url.indexOf("?"); // seperator between body and parameters
+        if (i >= 0) {                                   // 如果存在参数,那么提取参数 sercicecheck=false
             String[] parts = url.substring(i + 1).split("\\&");
             parameters = new HashMap<String, String>();
             for (String part : parts) {
@@ -222,18 +223,18 @@ public final class URL implements Serializable {
                     }
                 }
             }
-            url = url.substring(0, i);
+            url = url.substring(0, i);                   // 截取url,抹去参数,也就是 ? 之后的数据
         }
         i = url.indexOf("://");
         if (i >= 0) {
-            if (i == 0) throw new IllegalStateException("url missing protocol: \"" + url + "\"");
-            protocol = url.substring(0, i);
-            url = url.substring(i + 3);
+            if (i == 0) { throw new IllegalStateException("url missing protocol: \"" + url + "\""); }
+            protocol = url.substring(0, i);  // 提取协议 ： zookeeper
+            url = url.substring(i + 3);      // 截取协议之后的剩余数据，也就是 ：// 之后，?之前的数据 zookeeper://lanboal:123456@127.0.0.1:2181 >>  lanboal:123456@127.0.0.1:2181
         } else {
             // case: file:/path/to/file.txt
             i = url.indexOf(":/");
             if (i >= 0) {
-                if (i == 0) throw new IllegalStateException("url missing protocol: \"" + url + "\"");
+                if (i == 0) { throw new IllegalStateException("url missing protocol: \"" + url + "\""); }
                 protocol = url.substring(0, i);
                 url = url.substring(i + 1);
             }
@@ -244,22 +245,26 @@ public final class URL implements Serializable {
             path = url.substring(i + 1);
             url = url.substring(0, i);
         }
+        // 提取用户名和密码
         i = url.indexOf("@");
         if (i >= 0) {
             username = url.substring(0, i);
             int j = username.indexOf(":");
             if (j >= 0) {
-                password = username.substring(j + 1);
-                username = username.substring(0, j);
+                username = username.substring(0, j);            // 用户名： lanboal
+                password = username.substring(j + 1);           // 密码 ： 123456
             }
-            url = url.substring(i + 1);
+            url = url.substring(i + 1);                         // 截取url : 127.0.0.1:2181
         }
         i = url.indexOf(":");
         if (i >= 0 && i < url.length() - 1) {
-            port = Integer.parseInt(url.substring(i + 1));
-            url = url.substring(0, i);
+            port = Integer.parseInt(url.substring(i + 1));      // 端口 ： 2181
+            url = url.substring(0, i);                          // url ：127.0.0.1
         }
-        if (url.length() > 0) host = url;
+        if (url.length() > 0) {
+            host = url;
+        }
+        // new URL("zookeeper", "lanboal", "123456", "127.0.0.1", "2181", null, sercicecheck=false)
         return new URL(protocol, username, password, host, port, path, parameters);
     }
 
@@ -311,11 +316,11 @@ public final class URL implements Serializable {
 
     public String getAuthority() {
         if ((username == null || username.length() == 0)
-                && (password == null || password.length() == 0)) {
+            && (password == null || password.length() == 0)) {
             return null;
         }
         return (username == null ? "" : username)
-                + ":" + (password == null ? "" : password);
+            + ":" + (password == null ? "" : password);
     }
 
     public String getHost() {
@@ -400,7 +405,7 @@ public final class URL implements Serializable {
 
     private String appendDefaultPort(String address, int defaultPort) {
         if (address != null && address.length() > 0
-                && defaultPort > 0) {
+            && defaultPort > 0) {
             int i = address.indexOf(':');
             if (i < 0) {
                 return address + ":" + defaultPort;
@@ -928,23 +933,23 @@ public final class URL implements Serializable {
     }
 
     public URL addParameter(String key, Enum<?> value) {
-        if (value == null) return this;
+        if (value == null) { return this; }
         return addParameter(key, String.valueOf(value));
     }
 
     public URL addParameter(String key, Number value) {
-        if (value == null) return this;
+        if (value == null) { return this; }
         return addParameter(key, String.valueOf(value));
     }
 
     public URL addParameter(String key, CharSequence value) {
-        if (value == null || value.length() == 0) return this;
+        if (value == null || value.length() == 0) { return this; }
         return addParameter(key, String.valueOf(value));
     }
 
     public URL addParameter(String key, String value) {
         if (key == null || key.length() == 0
-                || value == null || value.length() == 0) {
+            || value == null || value.length() == 0) {
             return this;
         }
         // if value doesn't change, return immediately
@@ -959,7 +964,7 @@ public final class URL implements Serializable {
 
     public URL addParameterIfAbsent(String key, String value) {
         if (key == null || key.length() == 0
-                || value == null || value.length() == 0) {
+            || value == null || value.length() == 0) {
             return this;
         }
         if (hasParameter(key)) {
@@ -997,7 +1002,7 @@ public final class URL implements Serializable {
             }
         }
         // return immediately if there's no change
-        if (hasAndEqual) return this;
+        if (hasAndEqual) { return this; }
 
         Map<String, String> map = new HashMap<String, String>(getParameters());
         map.putAll(parameters);
@@ -1068,35 +1073,23 @@ public final class URL implements Serializable {
     }
 
     public String getRawParameter(String key) {
-        if ("protocol".equals(key))
-            return protocol;
-        if ("username".equals(key))
-            return username;
-        if ("password".equals(key))
-            return password;
-        if ("host".equals(key))
-            return host;
-        if ("port".equals(key))
-            return String.valueOf(port);
-        if ("path".equals(key))
-            return path;
+        if ("protocol".equals(key)) { return protocol; }
+        if ("username".equals(key)) { return username; }
+        if ("password".equals(key)) { return password; }
+        if ("host".equals(key)) { return host; }
+        if ("port".equals(key)) { return String.valueOf(port); }
+        if ("path".equals(key)) { return path; }
         return getParameter(key);
     }
 
     public Map<String, String> toMap() {
         Map<String, String> map = new HashMap<String, String>(parameters);
-        if (protocol != null)
-            map.put("protocol", protocol);
-        if (username != null)
-            map.put("username", username);
-        if (password != null)
-            map.put("password", password);
-        if (host != null)
-            map.put("host", host);
-        if (port > 0)
-            map.put("port", String.valueOf(port));
-        if (path != null)
-            map.put("path", path);
+        if (protocol != null) { map.put("protocol", protocol); }
+        if (username != null) { map.put("username", username); }
+        if (password != null) { map.put("password", password); }
+        if (host != null) { map.put("host", host); }
+        if (port > 0) { map.put("port", String.valueOf(port)); }
+        if (path != null) { map.put("path", path); }
         return map;
     }
 
@@ -1152,7 +1145,7 @@ public final class URL implements Serializable {
             boolean first = true;
             for (Map.Entry<String, String> entry : new TreeMap<String, String>(getParameters()).entrySet()) {
                 if (entry.getKey() != null && entry.getKey().length() > 0
-                        && (includes == null || includes.contains(entry.getKey()))) {
+                    && (includes == null || includes.contains(entry.getKey()))) {
                     if (first) {
                         if (concat) {
                             buf.append("?");
@@ -1238,7 +1231,7 @@ public final class URL implements Serializable {
      */
     public String getServiceKey() {
         String inf = getServiceInterface();
-        if (inf == null) return null;
+        if (inf == null) { return null; }
         StringBuilder buf = new StringBuilder();
         String group = getParameter(Constants.GROUP_KEY);
         if (group != null && group.length() > 0) {
@@ -1379,45 +1372,29 @@ public final class URL implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        URL other = (URL) obj;
+        if (this == obj) { return true; }
+        if (obj == null) { return false; }
+        if (getClass() != obj.getClass()) { return false; }
+        URL other = (URL)obj;
         if (host == null) {
-            if (other.host != null)
-                return false;
-        } else if (!host.equals(other.host))
-            return false;
+            if (other.host != null) { return false; }
+        } else if (!host.equals(other.host)) { return false; }
         if (parameters == null) {
-            if (other.parameters != null)
-                return false;
-        } else if (!parameters.equals(other.parameters))
-            return false;
+            if (other.parameters != null) { return false; }
+        } else if (!parameters.equals(other.parameters)) { return false; }
         if (password == null) {
-            if (other.password != null)
-                return false;
-        } else if (!password.equals(other.password))
-            return false;
+            if (other.password != null) { return false; }
+        } else if (!password.equals(other.password)) { return false; }
         if (path == null) {
-            if (other.path != null)
-                return false;
-        } else if (!path.equals(other.path))
-            return false;
-        if (port != other.port)
-            return false;
+            if (other.path != null) { return false; }
+        } else if (!path.equals(other.path)) { return false; }
+        if (port != other.port) { return false; }
         if (protocol == null) {
-            if (other.protocol != null)
-                return false;
-        } else if (!protocol.equals(other.protocol))
-            return false;
+            if (other.protocol != null) { return false; }
+        } else if (!protocol.equals(other.protocol)) { return false; }
         if (username == null) {
-            if (other.username != null)
-                return false;
-        } else if (!username.equals(other.username))
-            return false;
+            if (other.username != null) { return false; }
+        } else if (!username.equals(other.username)) { return false; }
         return true;
     }
 
