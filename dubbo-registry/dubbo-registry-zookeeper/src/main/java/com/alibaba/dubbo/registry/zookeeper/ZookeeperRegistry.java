@@ -65,7 +65,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 监听器集合
      */
-    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
+    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners
+        = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
     /**
      * Zookeeper 客户端
      */
@@ -86,6 +87,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         zkClient = zookeeperTransporter.connect(url);
         // 添加 StateListener 对象。该监听器，在重连时，调用恢复方法。
         zkClient.addStateListener(new StateListener() {
+            @Override
             public void stateChanged(int state) {
                 if (state == RECONNECTED) {
                     try {
@@ -167,7 +169,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                                 if (!anyServices.contains(child)) {
                                     anyServices.add(child);
                                     subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child,
-                                            Constants.CHECK_KEY, String.valueOf(false)), listener);
+                                        Constants.CHECK_KEY, String.valueOf(false)), listener);
                                 }
                             }
                         }
@@ -184,10 +186,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         service = URL.decode(service);
                         anyServices.add(service);
                         subscribe(url.setPath(service).addParameters(Constants.INTERFACE_KEY, service,
-                                Constants.CHECK_KEY, String.valueOf(false)), listener);
+                            Constants.CHECK_KEY, String.valueOf(false)), listener);
                     }
                 }
-            // 处理指定 Service 层的发起订阅，例如服务消费者的订阅
+                // 处理指定 Service 层的发起订阅，例如服务消费者的订阅
             } else {
                 // 子节点数据数组
                 List<URL> urls = new ArrayList<URL>();
@@ -311,10 +313,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
         // 获得分类数组
         String[] categories;
         if (Constants.ANY_VALUE.equals(url.getParameter(Constants.CATEGORY_KEY))) { // * 时，
-            categories = new String[]{Constants.PROVIDERS_CATEGORY, Constants.CONSUMERS_CATEGORY,
-                    Constants.ROUTERS_CATEGORY, Constants.CONFIGURATORS_CATEGORY};
+            categories = new String[] {Constants.PROVIDERS_CATEGORY, Constants.CONSUMERS_CATEGORY,
+                Constants.ROUTERS_CATEGORY, Constants.CONFIGURATORS_CATEGORY};
         } else {
-            categories = url.getParameter(Constants.CATEGORY_KEY, new String[]{Constants.DEFAULT_CATEGORY});
+            categories = url.getParameter(Constants.CATEGORY_KEY, new String[] {Constants.DEFAULT_CATEGORY});
         }
         // 获得分类路径数组
         String[] paths = new String[categories.length];
@@ -353,7 +355,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 获得 providers 中，和 consumer 匹配的 URL 数组
      *
-     * @param consumer 用于匹配 URL
+     * @param consumer  用于匹配 URL
      * @param providers 被匹配的 URL 的字符串
      * @return 匹配的 URL 数组
      */
@@ -378,8 +380,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
      *
      * 若不存在匹配，则创建 `empty://` 的 URL返回。通过这样的方式，可以处理类似服务提供者为空的情况。
      *
-     * @param consumer 用于匹配 URL
-     * @param path 被匹配的 URL 的字符串
+     * @param consumer  用于匹配 URL
+     * @param path      被匹配的 URL 的字符串
      * @param providers 匹配的 URL 数组
      * @return 匹配的 URL 数组
      */

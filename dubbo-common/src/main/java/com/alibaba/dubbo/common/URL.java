@@ -379,6 +379,12 @@ public final class URL implements Serializable {
         return getBackupAddress(0);
     }
 
+    /**
+     * 获取地址，如果含有backup参数则也加上
+     *
+     * @param defaultPort
+     * @return
+     */
     public String getBackupAddress(int defaultPort) {
         StringBuilder address = new StringBuilder(appendDefaultPort(getAddress(), defaultPort));
         String[] backups = getParameter(Constants.BACKUP_KEY, new String[0]);

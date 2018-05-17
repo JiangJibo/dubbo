@@ -37,10 +37,11 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
 
     public ZkclientZookeeperClient(URL url) {
         super(url);
-        // 创建 client 对象
+        // 创建 client 对象,地址为：127.0.0.1:2181 形式
         client = new ZkClientWrapper(url.getBackupAddress(), 30000);
         // 添加连接监听器
         client.addListener(new IZkStateListener() {
+            @Override
             public void handleStateChanged(KeeperState state) throws Exception {
                 ZkclientZookeeperClient.this.state = state;
                 if (state == KeeperState.Disconnected) {
@@ -50,6 +51,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
                 }
             }
 
+            @Override
             public void handleNewSession() throws Exception {
                 stateChanged(StateListener.RECONNECTED);
             }
@@ -57,7 +59,6 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
         // 启动 client
         client.start();
     }
-
 
     public void createPersistent(String path) {
         try {
@@ -107,7 +108,7 @@ public class ZkclientZookeeperClient extends AbstractZookeeperClient<IZkChildLis
     public IZkChildListener createTargetChildListener(String path, final ChildListener listener) {
         return new IZkChildListener() {
             public void handleChildChange(String parentPath, List<String> currentChilds)
-                    throws Exception {
+                throws Exception {
                 listener.childChanged(parentPath, currentChilds);
             }
         };
