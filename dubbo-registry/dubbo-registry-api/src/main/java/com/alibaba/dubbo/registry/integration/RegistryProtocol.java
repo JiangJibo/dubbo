@@ -29,6 +29,7 @@ import com.alibaba.dubbo.registry.NotifyListener;
 import com.alibaba.dubbo.registry.Registry;
 import com.alibaba.dubbo.registry.RegistryFactory;
 import com.alibaba.dubbo.registry.RegistryService;
+import com.alibaba.dubbo.registry.support.FailbackRegistry;
 import com.alibaba.dubbo.registry.support.ProviderConsumerRegTable;
 import com.alibaba.dubbo.rpc.Exporter;
 import com.alibaba.dubbo.rpc.Invoker;
@@ -319,7 +320,7 @@ public class RegistryProtocol implements Protocol {
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 获得真实的注册中心的 URL
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
-        //获得注册中心,第一次会连接zookeeper，创建 {@link ZooKeeperClient}
+        //获得注册中心,第一次会连接zookeeper，创建 {@link ZooKeeperClient},生成{@link ZookeeperRegistry}
         Registry registry = registryFactory.getRegistry(url);
         // TODO 芋艿
         if (RegistryService.class.equals(type)) {
@@ -349,7 +350,7 @@ public class RegistryProtocol implements Protocol {
      * 执行服务引用，返回 Invoker 对象
      *
      * @param cluster  Cluster 对象
-     * @param registry 注册中心对象
+     * @param registry 注册中心对象  {@link FailbackRegistry}
      * @param type     服务接口类型
      * @param url      注册中心 URL
      * @param <T>      泛型
@@ -364,18 +365,12 @@ public class RegistryProtocol implements Protocol {
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters()); // 服务引用配置集合
         URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, parameters.remove(Constants.REGISTER_IP_KEY), 0, type.getName(), parameters);
-        // 向注册中心注册自己（服务消费者）
-        if (!Constants.ANY_VALUE.equals(url.getServiceInterface())
-            && url.getParameter(Constants.REGISTER_KEY, true)) {
-            registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
-                Constants.CHECK_KEY, String.valueOf(false)));
+        // 向注册中心注册自己（服务消费者）,FailbackRegistry
+        if (!Constants.ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(Constants.REGISTER_KEY, true)) {
+            registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY, Constants.CHECK_KEY, String.valueOf(false)));
         }
         // 向注册中心订阅服务提供者
-        directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
-            Constants.PROVIDERS_CATEGORY
-                + "," + Constants.CONFIGURATORS_CATEGORY
-                + "," + Constants.ROUTERS_CATEGORY));
-
+        directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY, Constants.PROVIDERS_CATEGORY + "," + Constants.CONFIGURATORS_CATEGORY + "," + Constants.ROUTERS_CATEGORY));
         // 创建 Invoker 对象，【TODO 8015】集群容错
         Invoker invoker = cluster.join(directory);
         // 向本地注册表，注册消费者

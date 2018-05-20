@@ -85,7 +85,7 @@ public @interface Reference {
     boolean injvm() default false;
 
     /**
-     * 是否校验过
+     * 是否校验,当值为true时,若相应接口没有Provider,则会抛出异常
      *
      * @return
      */

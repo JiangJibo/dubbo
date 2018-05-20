@@ -25,7 +25,7 @@ import java.util.Random;
 
 /**
  * random load balance.
- *
+ * 随机性的负载均衡策略
  */
 public class RandomLoadBalance extends AbstractLoadBalance {
 
@@ -33,18 +33,27 @@ public class RandomLoadBalance extends AbstractLoadBalance {
 
     private final Random random = new Random();
 
+    /**
+     * 随机从Invoker集合中选择一个
+     *
+     * @param invokers
+     * @param url
+     * @param invocation
+     * @param <T>
+     * @return
+     */
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         int length = invokers.size(); // Number of invokers
         int totalWeight = 0; // The sum of weights
         boolean sameWeight = true; // Every invoker has the same weight?
         for (int i = 0; i < length; i++) {
-            int weight = getWeight(invokers.get(i), invocation);
+            int weight = getWeight(invokers.get(i), invocation);  // 默认值100
             totalWeight += weight; // Sum
-            if (sameWeight && i > 0
-                    && weight != getWeight(invokers.get(i - 1), invocation)) {
+            if (sameWeight && i > 0 && weight != getWeight(invokers.get(i - 1), invocation)) {
                 sameWeight = false;
             }
         }
+        // 默认情况下 sameWeight == true
         if (totalWeight > 0 && !sameWeight) {
             // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on totalWeight.
             int offset = random.nextInt(totalWeight);

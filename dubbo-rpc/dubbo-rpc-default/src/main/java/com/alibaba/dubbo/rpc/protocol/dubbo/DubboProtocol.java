@@ -479,10 +479,12 @@ public class DubboProtocol extends AbstractProtocol {
      * Create new connection
      *
      * 创建 ExchangeClient 对象，"连接"服务器
+     * @param url  provider 的 url
+     * @return
      */
     private ExchangeClient initClient(URL url) {
         // 校验 Client 的 Dubbo SPI 拓展是否存在
-        // client type setting.
+        // client type setting. 默认值 netty
         String str = url.getParameter(Constants.CLIENT_KEY, url.getParameter(Constants.SERVER_KEY, Constants.DEFAULT_REMOTING_CLIENT));
         // BIO is not allowed since it has severe performance issue.
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
@@ -493,7 +495,7 @@ public class DubboProtocol extends AbstractProtocol {
         // 设置编解码器为 Dubbo ，即 DubboCountCodec
         url = url.addParameter(Constants.CODEC_KEY, DubboCodec.NAME);
 
-        // 默认开启 heartbeat
+        // 默认开启 heartbeat, 心跳间隔默认为 60*1000 ,也就是一分钟
         // enable heartbeat by default
         url = url.addParameterIfAbsent(Constants.HEARTBEAT_KEY, String.valueOf(Constants.DEFAULT_HEARTBEAT));
 

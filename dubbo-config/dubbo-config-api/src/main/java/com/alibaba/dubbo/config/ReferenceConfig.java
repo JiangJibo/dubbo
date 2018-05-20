@@ -547,6 +547,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (c == null) {
             c = true; // default true
         }
+        // 如果check=true,且@Reference标识的接口没有Provider, invoker对象一般为MockClusterInvoker类型
         if (c && !invoker.isAvailable()) {
             throw new IllegalStateException(
                 "Failed to check the status of the service " + interfaceName + ". No provider available for the service " + (group == null ? "" : group + "/")

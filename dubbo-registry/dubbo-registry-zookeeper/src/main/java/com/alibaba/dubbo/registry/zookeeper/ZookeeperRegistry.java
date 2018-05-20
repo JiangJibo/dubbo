@@ -77,12 +77,12 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
-        // 获得 Zookeeper 根节点
+        // 获得 Zookeeper 根节点, 未指定时为dubbo
         String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT); // `url.parameters.group` 参数值
         if (!group.startsWith(Constants.PATH_SEPARATOR)) {
             group = Constants.PATH_SEPARATOR + group;
         }
-        this.root = group;
+        this.root = group;   // root = "/dubbo"
         // 创建 Zookeeper Client
         zkClient = zookeeperTransporter.connect(url);
         // 添加 StateListener 对象。该监听器，在重连时，调用恢复方法。
@@ -128,6 +128,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * 向Zookeeper注册URL
+     *
+     * @param url
+     */
     @Override
     protected void doRegister(URL url) {
         try {
@@ -205,6 +210,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     ChildListener zkListener = listeners.get(listener);
                     if (zkListener == null) { // 不存在 ChildListener 对象，进行创建 ChildListener 对象
                         listeners.putIfAbsent(listener, new ChildListener() {
+                            @Override
                             public void childChanged(String parentPath, List<String> currentChilds) {
                                 // 变更时，调用 `#notify(...)` 方法，回调 NotifyListener
                                 ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds));
@@ -214,7 +220,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                     // 创建 Type 节点。该节点为持久节点。
                     zkClient.create(path, false);
-                    // 向 Zookeeper ，PATH 节点，发起订阅
+                    // 向 Zookeeper ，PATH 节点，发起订阅,返回此节点下的所有子元素
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     // 添加到 `urls` 中
                     if (children != null) {
@@ -286,7 +292,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     /**
-     * 获得服务路径
+     * 获得服务路径 /dobbo/***Service
      *
      * Root + Type
      *
