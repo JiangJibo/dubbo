@@ -29,6 +29,7 @@ import com.alibaba.dubbo.rpc.Result;
 import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.cluster.Directory;
 import com.alibaba.dubbo.rpc.cluster.LoadBalance;
+import com.alibaba.dubbo.rpc.cluster.loadbalance.RandomLoadBalance;
 import com.alibaba.dubbo.rpc.support.RpcUtils;
 
 import java.util.ArrayList;
@@ -37,7 +38,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * AbstractClusterInvoker
- *
  */
 public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
 
@@ -56,8 +56,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     }
 
     public AbstractClusterInvoker(Directory<T> directory, URL url) {
-        if (directory == null)
-            throw new IllegalArgumentException("service directory == null");
+        if (directory == null) { throw new IllegalArgumentException("service directory == null"); }
 
         this.directory = directory;
         //sticky: invoker.isAvailable() should always be checked before using when availablecheck is true.
@@ -88,21 +87,22 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
 
     /**
      * Select a invoker using loadbalance policy.</br>
-     * a)Firstly, select an invoker using loadbalance. If this invoker is in previously selected list, or, if this invoker is unavailable, then continue step b (reselect), otherwise return the first selected invoker</br>
-     * b)Reslection, the validation rule for reselection: selected > available. This rule guarantees that the selected invoker has the minimum chance to be one in the previously selected list, and also guarantees this invoker is available.
+     * a)Firstly, select an invoker using loadbalance. If this invoker is in previously selected list, or, if this invoker is unavailable, then continue step
+     * b (reselect), otherwise return the first selected invoker</br>
+     * b)Reslection, the validation rule for reselection: selected > available. This rule guarantees that the selected invoker has the minimum chance to be
+     * one in the previously selected list, and also guarantees this invoker is available.
      *
      * @param loadbalance load balance policy
      * @param invocation
-     * @param invokers invoker candidates
-     * @param selected  exclude selected invokers or not
+     * @param invokers    invoker candidates
+     * @param selected    exclude selected invokers or not
      * @return
      * @throws RpcExceptione
      */
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
-        if (invokers == null || invokers.isEmpty())
-            return null;
+        if (invokers == null || invokers.isEmpty()) { return null; }
         String methodName = invocation == null ? "" : invocation.getMethodName();
-
+        // 是否允许粘性的Invoker
         boolean sticky = invokers.get(0).getUrl().getMethodParameter(methodName, Constants.CLUSTER_STICKY_KEY, Constants.DEFAULT_CLUSTER_STICKY);
         {
             //ignore overloaded method
@@ -124,21 +124,31 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         return invoker;
     }
 
+    /**
+     * 从Invoker集群中选择一个可用的
+     *
+     * @param loadbalance {@link RandomLoadBalance}
+     * @param invocation
+     * @param invokers
+     * @param selected
+     * @return
+     * @throws RpcException
+     */
     private Invoker<T> doselect(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
-        if (invokers == null || invokers.isEmpty())
-            return null;
-        if (invokers.size() == 1)
-            return invokers.get(0);
+        if (invokers == null || invokers.isEmpty()) { return null; }
+        if (invokers.size() == 1) { return invokers.get(0); }
         // If we only have two invokers, use round-robin instead.
         if (invokers.size() == 2 && selected != null && !selected.isEmpty()) {
             return selected.get(0) == invokers.get(0) ? invokers.get(1) : invokers.get(0);
         }
+        // 通过负载均衡器选择一个,默认情况下是随机选择一个
         Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
 
         //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
-        if ((selected != null && selected.contains(invoker))
-                || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
+        if ((selected != null && selected.contains(invoker)) || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
             try {
+                // 因为有重试机制,如果上次未成功,那么selected里会有上次选择过的Invoker;
+                // 如果这次选择的不合适,那么重新选择
                 Invoker<T> rinvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
                 if (rinvoker != null) {
                     invoker = rinvoker;
@@ -171,7 +181,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      */
     private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck)
-            throws RpcException {
+        throws RpcException {
 
         //Allocating one in advance, this list is certain to be used.
         List<Invoker<T>> reselectInvokers = new ArrayList<Invoker<T>>(invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
@@ -203,7 +213,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             if (selected != null) {
                 for (Invoker<T> invoker : selected) {
                     if ((invoker.isAvailable()) // available first
-                            && !reselectInvokers.contains(invoker)) {
+                        && !reselectInvokers.contains(invoker)) {
                         reselectInvokers.add(invoker);
                     }
                 }
@@ -224,7 +234,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         List<Invoker<T>> invokers = list(invocation);
         if (invokers != null && !invokers.isEmpty()) {
             loadbalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
-                    .getMethodParameter(invocation.getMethodName(), Constants.LOADBALANCE_KEY, Constants.DEFAULT_LOADBALANCE));
+                .getMethodParameter(invocation.getMethodName(), Constants.LOADBALANCE_KEY, Constants.DEFAULT_LOADBALANCE));
         } else {
             loadbalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(Constants.DEFAULT_LOADBALANCE);
         }
@@ -235,8 +245,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     protected void checkWhetherDestroyed() {
         if (destroyed.get()) {
             throw new RpcException("Rpc cluster invoker for " + getInterface() + " on consumer " + NetUtils.getLocalHost()
-                    + " use dubbo version " + Version.getVersion()
-                    + " is now destroyed! Can not invoke any more.");
+                + " use dubbo version " + Version.getVersion()
+                + " is now destroyed! Can not invoke any more.");
         }
     }
 
@@ -248,12 +258,12 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     protected void checkInvokers(List<Invoker<T>> invokers, Invocation invocation) {
         if (invokers == null || invokers.isEmpty()) {
             throw new RpcException("Failed to invoke the method "
-                    + invocation.getMethodName() + " in the service " + getInterface().getName()
-                    + ". No provider available for the service " + directory.getUrl().getServiceKey()
-                    + " from registry " + directory.getUrl().getAddress()
-                    + " on the consumer " + NetUtils.getLocalHost()
-                    + " using the dubbo version " + Version.getVersion()
-                    + ". Please check if the providers have been started and registered.");
+                + invocation.getMethodName() + " in the service " + getInterface().getName()
+                + ". No provider available for the service " + directory.getUrl().getServiceKey()
+                + " from registry " + directory.getUrl().getAddress()
+                + " on the consumer " + NetUtils.getLocalHost()
+                + " using the dubbo version " + Version.getVersion()
+                + ". Please check if the providers have been started and registered.");
         }
     }
 
