@@ -93,6 +93,8 @@ public class UrlUtils {
         int port = u.getPort();
         String path = u.getPath();
         Map<String, String> parameters = new HashMap<String, String>(u.getParameters());
+
+        // 如果原始url上未指定protocol,username,password, 但有default值,则追加到url上
         if ((protocol == null || protocol.length() == 0) && defaultProtocol.length() > 0) {
             changed = true;
             protocol = defaultProtocol;

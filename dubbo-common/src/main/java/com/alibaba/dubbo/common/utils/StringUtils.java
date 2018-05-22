@@ -353,7 +353,7 @@ public final class StringUtils {
      * 获得服务键
      *
      * 格式为 ${group}/${interface}:${version}
-     * 例如，com.alibaba.dubbo.demo.DemoService
+     * 例如，com.alibaba.dubbo.demo.DemoService:1.0.0
      *
      * @param ps 参数集合 {@link com.alibaba.dubbo.common.URL#parameter}
      * @return 服务键

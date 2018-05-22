@@ -236,6 +236,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     for (URL url : urls) {
                         // 设置 `registry=${protocol}` 和 `protocol=registry` 到 URL
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
+                        // 首先需要使用url向zookeeper注册自身
                         url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
                         // 添加到结果
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true)) // 服务提供者 && 注册
