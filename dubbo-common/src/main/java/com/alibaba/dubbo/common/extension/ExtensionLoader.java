@@ -715,6 +715,7 @@ public class ExtensionLoader<T> {
             injectExtension(instance);
             // 创建 Wrapper 拓展对象
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
+            // 如果加载了配置文件后，有包装类,那么用包装类去包装原始的组件,返回包装组件,多重包装,返回最后一个包装组件
             if (wrapperClasses != null && !wrapperClasses.isEmpty()) {
                 for (Class<?> wrapperClass : wrapperClasses) {
                     instance = injectExtension((T)wrapperClass.getConstructor(type).newInstance(instance));
@@ -836,7 +837,7 @@ public class ExtensionLoader<T> {
      * @param dir              文件名
      */
     private void loadFile(Map<String, Class<?>> extensionClasses, String dir) {
-        // 完整的文件名
+        // 完整的文件名 ,如： "META-INF/dubbo/internal/com.alibaba.dubbo.rpc.Protocol
         String fileName = dir + type.getName();
         try {
             Enumeration<java.net.URL> urls;
@@ -887,7 +888,7 @@ public class ExtensionLoader<T> {
                                                         + ", " + clazz.getClass().getName());
                                                 }
                                             } else {
-                                                // 缓存拓展 Wrapper 实现类到 `cachedWrapperClasses`
+                                                // 缓存拓展 Wrapper 实现类到 `cachedWrapperClasses`,包装类统一有一个含原始类型的构造函数
                                                 try {
                                                     clazz.getConstructor(type);
                                                     Set<Class<?>> wrappers = cachedWrapperClasses;
@@ -994,6 +995,7 @@ public class ExtensionLoader<T> {
     /**
      * @return 自适应拓展类
      */
+    @SuppressWarnings("deprecation")
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {

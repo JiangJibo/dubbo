@@ -77,7 +77,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
-        // 获得 Zookeeper 根节点, 未指定时为dubbo
+        // 获得 Zookeeper 根节点, 未指定 "group" 参数时为 dubbo
         String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT); // `url.parameters.group` 参数值
         if (!group.startsWith(Constants.PATH_SEPARATOR)) {
             group = Constants.PATH_SEPARATOR + group;
@@ -220,7 +220,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                     // 创建 Type 节点。该节点为持久节点。
                     zkClient.create(path, false);
-                    // 向 Zookeeper ，PATH 节点，发起订阅,返回此节点下的所有子元素
+                    // 向 Zookeeper ，PATH 节点，发起订阅,返回此节点下的所有子元素 path : /根节点/接口全名/providers, 比如 ： /dubbo/com.bob.service.CityService/providers
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     // 添加到 `urls` 中
                     if (children != null) {
@@ -310,7 +310,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 获得分类路径数组
      *
-     * Root + Service + Type
+     * Root + Service + Type : /dubbo/com.bob.service.CityService/providers
+     *
      *
      * @param url URL
      * @return 分类路径数组

@@ -101,6 +101,11 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         return stateListeners;
     }
 
+    /**
+     * @param path     节点路径 /dubbo/com.bob.service.CityService/providers
+     * @param listener 监听器
+     * @return
+     */
     @Override
     public List<String> addChildListener(String path, final ChildListener listener) {
         // 获得路径下的监听器数组
