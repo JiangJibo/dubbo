@@ -157,8 +157,11 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         this.registry = registry;
     }
 
+
+
     /**
      * 订阅指定的url
+     * 在订阅成功后回调{@link #notify(List)}
      *
      * @param url
      */
@@ -167,31 +170,12 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         registry.subscribe(url, this);
     }
 
-    public void destroy() {
-        if (isDestroyed()) {
-            return;
-        }
-        // unsubscribe.
-        try {
-            if (getConsumerUrl() != null && registry != null && registry.isAvailable()) {
-                registry.unsubscribe(getConsumerUrl(), this);
-            }
-        } catch (Throwable t) {
-            logger.warn("unexpeced error when unsubscribe service " + serviceKey + "from registry" + registry.getUrl(), t);
-        }
-        super.destroy(); // must be executed after unsubscribing
-        try {
-            destroyAllInvokers();
-        } catch (Throwable t) {
-            logger.warn("Failed to destroy service " + serviceKey, t);
-        }
-    }
-
     /**
      * 接受Zookeeper的状态变更通知
      *
      * @param urls 已注册信息列表，总不为空，含义同{@link com.alibaba.dubbo.registry.RegistryService#lookup(URL)}的返回值。
      */
+    @Override
     public synchronized void notify(List<URL> urls) {
         List<URL> invokerUrls = new ArrayList<URL>();
         List<URL> routerUrls = new ArrayList<URL>();
@@ -376,6 +360,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (Constants.EMPTY_PROTOCOL.equals(providerUrl.getProtocol())) {
                 continue;
             }
+            // 如果Provider的protocol不是已知的
             if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(providerUrl.getProtocol())) {
                 logger.error(new IllegalStateException(
                     "Unsupported protocol " + providerUrl.getProtocol() + " in notified url: " + providerUrl + " from registry " + getUrl().getAddress()
@@ -405,7 +390,8 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         enabled = url.getParameter(Constants.ENABLED_KEY, true);
                     }
                     if (enabled) {
-                        // 分发式的Invoker, 便于负载均衡
+                        // 分发式的Invoker, 便于负载均衡 , protocol.refer(serviceType, url) refer Provider,生成Invoker
+                        // protocol  >> Protocol$Adaptive , 通过ExtesionLoader获取到的是 Wrapper包装,比如 ProtocolFilterWrapper
                         invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {
@@ -543,6 +529,26 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             localUrlInvokerMap.clear();
         }
         methodInvokerMap = null;
+    }
+
+    public void destroy() {
+        if (isDestroyed()) {
+            return;
+        }
+        // unsubscribe.
+        try {
+            if (getConsumerUrl() != null && registry != null && registry.isAvailable()) {
+                registry.unsubscribe(getConsumerUrl(), this);
+            }
+        } catch (Throwable t) {
+            logger.warn("unexpeced error when unsubscribe service " + serviceKey + "from registry" + registry.getUrl(), t);
+        }
+        super.destroy(); // must be executed after unsubscribing
+        try {
+            destroyAllInvokers();
+        } catch (Throwable t) {
+            logger.warn("Failed to destroy service " + serviceKey, t);
+        }
     }
 
     /**

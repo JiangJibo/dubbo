@@ -401,6 +401,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    @Override
     public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {
         // 初始化序列化优化器
         optimizeSerialization(url);

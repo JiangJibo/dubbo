@@ -80,7 +80,7 @@ public class ProtocolFilterWrapper implements Protocol {
                         return invoker.isAvailable();
                     }
 
-                    @Override
+                    @Override  // 每个Filter最终都会执行Invoker的invoke()方法
                     public Result invoke(Invocation invocation) throws RpcException {
                         return filter.invoke(next, invocation);
                     }
@@ -122,7 +122,7 @@ public class ProtocolFilterWrapper implements Protocol {
         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
             return protocol.refer(type, url);
         }
-        // 引用服务，返回 Invoker 对象
+        // 引用服务，返回 Invoker 对象 , 这个protocol 可能是 wrapper，比如 QosProtocolWrapper 或者是实际的Protocol,比如DubboProtocol
         // 给改 Invoker 对象，包装成带有 Filter 过滤链的 Invoker 对象
         return buildInvokerChain(protocol.refer(type, url), Constants.REFERENCE_FILTER_KEY, Constants.CONSUMER);
     }

@@ -60,7 +60,7 @@ public class ProtocolListenerWrapper implements Protocol {
     }
 
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-        // 注册中心协议
+        // 如果是向Zookeeper注册自身
         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
             return protocol.refer(type, url);
         }
