@@ -49,14 +49,22 @@ public class NettyClient extends AbstractClient {
 
     // ChannelFactory's closure has a DirectMemory leak, using static to avoid
     // https://issues.jboss.org/browse/NETTY-424
-    private static final ChannelFactory channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientBoss", true)),
-            Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientWorker", true)),
-            Constants.DEFAULT_IO_THREADS);
+    private static final ChannelFactory channelFactory = new NioClientSocketChannelFactory(
+        Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientBoss", true)),
+        Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientWorker", true)),
+        Constants.DEFAULT_IO_THREADS);
 
     private ClientBootstrap bootstrap;
 
     private volatile org.jboss.netty.channel.Channel channel; // volatile, please copy reference to use
 
+    /**
+     * 实例化ChannelHandler,此类间接实现了ChannelHandler的所有方法,用于信息的处理
+     *
+     * @param url
+     * @param handler
+     * @throws RemotingException
+     */
     public NettyClient(final URL url, final ChannelHandler handler) throws RemotingException {
         super(url, wrapChannelHandler(url, handler));
     }
@@ -80,13 +88,14 @@ public class NettyClient extends AbstractClient {
 
         // 设置责任链路
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            @Override
             public ChannelPipeline getPipeline() {
                 // 创建 NettyCodecAdapter 对象
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("decoder", adapter.getDecoder()); // 解码
-                pipeline.addLast("encoder", adapter.getEncoder()); // 编码
-                pipeline.addLast("handler", nettyHandler); // 处理器
+                pipeline.addLast("decoder", adapter.getDecoder());  // 解码
+                pipeline.addLast("encoder", adapter.getEncoder());  // 编码
+                pipeline.addLast("handler", nettyHandler);          // 处理器  , 将自身作为Netty的一个ChannelHandler, 用于处理数据的交互
                 return pipeline;
             }
         });
@@ -130,21 +139,21 @@ public class NettyClient extends AbstractClient {
                             NettyClient.this.channel = null;
                             NettyChannel.removeChannelIfDisconnected(newChannel);
                         }
-                    // 设置新连接
+                        // 设置新连接
                     } else {
                         NettyClient.this.channel = newChannel;
                     }
                 }
-            // 发生异常，抛出 RemotingException 异常
+                // 发生异常，抛出 RemotingException 异常
             } else if (future.getCause() != null) {
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
-                        + getRemoteAddress() + ", error message is:" + future.getCause().getMessage(), future.getCause());
-            // 无结果（连接超时），抛出 RemotingException 异常
+                    + getRemoteAddress() + ", error message is:" + future.getCause().getMessage(), future.getCause());
+                // 无结果（连接超时），抛出 RemotingException 异常
             } else {
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
-                        + getRemoteAddress() + " client-side timeout "
-                        + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
-                        + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
+                    + getRemoteAddress() + " client-side timeout "
+                    + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
+                    + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
             }
         } finally {
             // 未连接，取消任务
@@ -175,8 +184,7 @@ public class NettyClient extends AbstractClient {
     @Override
     protected com.alibaba.dubbo.remoting.Channel getChannel() {
         Channel c = channel;
-        if (c == null || !c.isConnected())
-            return null;
+        if (c == null || !c.isConnected()) { return null; }
         return NettyChannel.getOrAddChannel(c, getUrl(), this);
     }
 

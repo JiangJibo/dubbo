@@ -698,7 +698,7 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
-        // 获得拓展名对应的拓展实现类
+        // 获得拓展名对应的拓展实现类,在加载配置文件时，已经换成了name >> class 的映射关系
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name); // 抛出异常
@@ -789,7 +789,7 @@ public class ExtensionLoader<T> {
                 if (classes == null) {
                     // 从配置文件中，加载拓展实现类数组
                     classes = loadExtensionClasses();
-                    // 设置到缓存中
+                    // 设置到缓存中,之后就能通过name来获取对应的Class
                     cachedClasses.set(classes);
                 }
             }
@@ -878,6 +878,7 @@ public class ExtensionLoader<T> {
                                                     type + ", class line: " + clazz.getName() + "), class "
                                                     + clazz.getName() + "is not subtype of interface.");
                                             }
+
                                             // 缓存自适应拓展对象的类到 `cachedAdaptiveClass`
                                             if (clazz.isAnnotationPresent(Adaptive.class)) {
                                                 if (cachedAdaptiveClass == null) {
@@ -900,9 +901,11 @@ public class ExtensionLoader<T> {
                                                     // 缓存拓展实现类到 `extensionClasses`
                                                 } catch (NoSuchMethodException e) {
                                                     clazz.getConstructor();
-                                                    // 未配置拓展名，自动生成。例如，DemoFilter 为 demo 。主要用于兼容 Java SPI 的配置。
+                                                    // 未配置拓展名，自动生成。例如，protocol配置文件里的com.alibaba.dubbo.rpc.protocol.http.HttpProtocol，没有指定key
                                                     if (name == null || name.length() == 0) {
+                                                        // 从类的 @Extension 注解获取name, 如果未标识此注解，那么用类的 HttpProtocol - Protocol = http
                                                         name = findAnnotationName(clazz);
+                                                        // 如果类的名称不是以接口名称结尾
                                                         if (name == null || name.length() == 0) {
                                                             if (clazz.getSimpleName().length() > type.getSimpleName().length()
                                                                 && clazz.getSimpleName().endsWith(type.getSimpleName())) {
@@ -940,6 +943,7 @@ public class ExtensionLoader<T> {
                                                     }
                                                 }
                                             }
+
                                         }
                                     } catch (Throwable t) {
                                         // 发生异常，记录到异常集合
@@ -979,7 +983,7 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 创建自适应拓展对象
+     * 创建自适应拓展对象,获取到拓展类后，调用默认的构造函数获得实例
      *
      * @return 拓展对象
      */
@@ -997,7 +1001,9 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("deprecation")
     private Class<?> getAdaptiveExtensionClass() {
+        // 关键方法, 加载此接口的所有拓展类
         getExtensionClasses();
+        // 如果在加载拓展类的过程中，拓展类标识了 @Adaptive，那么这个类就会被缓存入cachedAdaptiveClass中
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
