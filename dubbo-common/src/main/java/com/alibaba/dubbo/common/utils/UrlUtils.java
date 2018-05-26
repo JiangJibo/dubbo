@@ -44,6 +44,7 @@ public class UrlUtils {
             return null;
         }
         // 以 Zookeeper 注册中心，配置集群的例子如下：
+        // java config : dubbo.registry.address = zookeeper://lanboal:123456@127.0.0.1:2181?login=false
         // 第一种，<dubbo:registry address="zookeeper://10.20.153.10:2181?backup=10.20.153.11:2181,10.20.153.12:2181"/>
         // 第二种，<dubbo:registry protocol="zookeeper" address="10.20.153.10:2181,10.20.153.11:2181,10.20.153.12:2181"/>
         String url;

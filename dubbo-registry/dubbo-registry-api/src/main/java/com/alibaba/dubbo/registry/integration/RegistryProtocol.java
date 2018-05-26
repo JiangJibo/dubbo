@@ -85,7 +85,7 @@ public class RegistryProtocol implements Protocol {
      */
     private Protocol protocol;
     /**
-     * RegistryFactory 自适应拓展实现类，通过 Dubbo SPI 自动注入。
+     * RegistryFactory 自适应拓展实现类，对象类型是RegistryFactory$Adaptive
      */
     private RegistryFactory registryFactory;
     private ProxyFactory proxyFactory;
@@ -320,7 +320,8 @@ public class RegistryProtocol implements Protocol {
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 获得真实的注册中心的 URL
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
-        //获得注册中心,第一次会连接zookeeper，创建 {@link ZooKeeperClient},生成{@link ZookeeperRegistry}
+        // 通过RegistryFactory$Adaptive 获取 ZookeeperRegistryFactory
+        // 获得注册中心,第一次会连接zookeeper，创建 {@link ZooKeeperClient},生成{@link ZookeeperRegistry}
         Registry registry = registryFactory.getRegistry(url);
         // TODO 芋艿
         if (RegistryService.class.equals(type)) {
