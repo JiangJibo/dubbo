@@ -53,7 +53,8 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
      * key2：ChildListener 对象
      * value ：监听器具体对象。不同 Zookeeper 客户端，实现会不同。
      */
-    private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
+    private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners
+        = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
     /**
      * 是否关闭
      */
@@ -75,14 +76,15 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         if (i > 0) {
             String parentPath = path.substring(0, i);
             if (!checkExists(parentPath)) {
+                // 创建持久化的父节点 ，/dubbo/***Service/providers, /dubbo/***Service/consumers
                 create(parentPath, false);
             }
         }
-        // 创建临时节点
         if (ephemeral) {
+            // 创建临时节点
             createEphemeral(path);
-        // 创建持久节点
         } else {
+            // 创建持久节点
             createPersistent(path);
         }
     }

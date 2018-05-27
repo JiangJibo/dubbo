@@ -49,7 +49,8 @@ public class HeaderExchangeClient implements ExchangeClient {
     /**
      * 定时器线程池
      */
-    private static final ScheduledThreadPoolExecutor scheduled = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("dubbo-remoting-client-heartbeat", true));
+    private static final ScheduledThreadPoolExecutor scheduled = new ScheduledThreadPoolExecutor(2,
+        new NamedThreadFactory("dubbo-remoting-client-heartbeat", true));
     /**
      * 客户端
      */
@@ -64,12 +65,12 @@ public class HeaderExchangeClient implements ExchangeClient {
      */
     private ScheduledFuture<?> heartbeatTimer;
     /**
-     * 是否心跳
+     * 心跳间隔
      */
     private int heartbeat;
     // heartbeat timeout (ms), default value is 0 , won't execute a heartbeat.
     /**
-     * 心跳间隔，单位：毫秒
+     * 心跳超时，单位：毫秒，默认是 3 * heartbeat
      */
     private int heartbeatTimeout;
 
@@ -82,6 +83,7 @@ public class HeaderExchangeClient implements ExchangeClient {
         this.channel = new HeaderExchangeChannel(client);
         // 读取心跳相关配置
         String dubbo = client.getUrl().getParameter(Constants.DUBBO_VERSION_KEY);
+        // 默认心跳间隔，前面设置过了，60*1000
         this.heartbeat = client.getUrl().getParameter(Constants.HEARTBEAT_KEY, dubbo != null && dubbo.startsWith("1.0.") ? Constants.DEFAULT_HEARTBEAT : 0);
         this.heartbeatTimeout = client.getUrl().getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);
         if (heartbeatTimeout < heartbeat * 2) { // 避免间隔太短
@@ -201,21 +203,30 @@ public class HeaderExchangeClient implements ExchangeClient {
         return channel.hasAttribute(key);
     }
 
+    /**
+     * 启动心跳线程,维护Consumer和Provider之间的长连接
+     * 若是 Consumer 请求向 Provider 失败， Consumer会定时尝试重新连接
+     * 若 Provider 超过指定时间未接收到Consumer的心跳信息，那么会关闭其与Provider的长连接
+     */
     private void startHeatbeatTimer() {
         // 停止原有定时任务
         stopHeartbeatTimer();
         // 发起新的定时任务
         if (heartbeat > 0) {
             heartbeatTimer = scheduled.scheduleWithFixedDelay(
-                    new HeartBeatTask(new HeartBeatTask.ChannelProvider() {
-                        public Collection<Channel> getChannels() {
-                            return Collections.<Channel>singletonList(HeaderExchangeClient.this);
-                        }
-                    }, heartbeat, heartbeatTimeout),
-                    heartbeat, heartbeat, TimeUnit.MILLISECONDS);
+                new HeartBeatTask(new HeartBeatTask.ChannelProvider() {
+                    @Override
+                    public Collection<Channel> getChannels() {
+                        return Collections.<Channel>singletonList(HeaderExchangeClient.this);
+                    }
+                }, heartbeat, heartbeatTimeout),
+                heartbeat, heartbeat, TimeUnit.MILLISECONDS);
         }
     }
 
+    /**
+     * 取消正在执行中的心跳线程
+     */
     private void stopHeartbeatTimer() {
         if (heartbeatTimer != null && !heartbeatTimer.isCancelled()) {
             try {

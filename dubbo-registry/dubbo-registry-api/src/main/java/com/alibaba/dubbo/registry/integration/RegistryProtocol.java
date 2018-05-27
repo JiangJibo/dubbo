@@ -81,7 +81,7 @@ public class RegistryProtocol implements Protocol {
      */
     private Cluster cluster;
     /**
-     * Protocol 自适应拓展实现类，通过 Dubbo SPI 自动注入。
+     * Protocol 自适应拓展实现类，Protocol$Adaptive
      */
     private Protocol protocol;
     /**
@@ -370,7 +370,7 @@ public class RegistryProtocol implements Protocol {
         if (!Constants.ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(Constants.REGISTER_KEY, true)) {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY, Constants.CHECK_KEY, String.valueOf(false)));
         }
-        // 向注册中心订阅服务提供者
+        // 向注册中心订阅服务提供者, 同时订阅providers,configurators,routers 三个类目
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY, Constants.PROVIDERS_CATEGORY + "," + Constants.CONFIGURATORS_CATEGORY + "," + Constants.ROUTERS_CATEGORY));
         // 创建 Invoker 对象，【TODO 8015】集群容错
         Invoker invoker = cluster.join(directory);

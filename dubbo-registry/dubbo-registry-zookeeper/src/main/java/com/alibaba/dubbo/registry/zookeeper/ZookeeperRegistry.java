@@ -198,7 +198,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
             } else {
                 // 子节点数据数组
                 List<URL> urls = new ArrayList<URL>();
-                // 循环分类数组
+                // 循环分类数组 , router, configurator, provider
                 for (String path : toCategoriesPath(url)) {
                     // 获得 url 对应的监听器集合
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
@@ -283,7 +283,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     /**
-     * Root
+     * Root , "/dubbo"
      *
      * @return 根路径
      */
@@ -310,20 +310,20 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 获得分类路径数组
      *
-     * Root + Service + Type : /dubbo/com.bob.service.CityService/providers
+     * Root + Service + Type : /dubbo/com.bob.service.CityService/providers, /dubbo/com.bob.service.CityService/consumers
      *
      *
      * @param url URL
      * @return 分类路径数组
      */
     private String[] toCategoriesPath(URL url) {
-        // 获得分类数组
+        // 获得分类数组,
         String[] categories;
         if (Constants.ANY_VALUE.equals(url.getParameter(Constants.CATEGORY_KEY))) { // * 时，
             categories = new String[] {Constants.PROVIDERS_CATEGORY, Constants.CONSUMERS_CATEGORY,
                 Constants.ROUTERS_CATEGORY, Constants.CONFIGURATORS_CATEGORY};
         } else {
-            categories = url.getParameter(Constants.CATEGORY_KEY, new String[] {Constants.DEFAULT_CATEGORY});
+            categories = url.getParameter(Constants.CATEGORY_KEY, new String[] {Constants.DEFAULT_CATEGORY});       // 默认订阅 router,confugurator,provider
         }
         // 获得分类路径数组
         String[] paths = new String[categories.length];

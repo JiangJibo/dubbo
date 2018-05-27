@@ -60,22 +60,20 @@ final class HeartBeatTask implements Runnable {
                     Long lastRead = (Long) channel.getAttribute(HeaderExchangeHandler.KEY_READ_TIMESTAMP);
                     Long lastWrite = (Long) channel.getAttribute(HeaderExchangeHandler.KEY_WRITE_TIMESTAMP);
                     // 最后读写的时间，任一超过心跳间隔，发送心跳
-                    if ((lastRead != null && now - lastRead > heartbeat)
-                            || (lastWrite != null && now - lastWrite > heartbeat)) {
+                    if ((lastRead != null && now - lastRead > heartbeat) || (lastWrite != null && now - lastWrite > heartbeat)) {
                         Request req = new Request();
                         req.setVersion("2.0.0");
                         req.setTwoWay(true); // 需要响应
-                        req.setEvent(Request.HEARTBEAT_EVENT);
-                        channel.send(req);
+                        req.setEvent(Request.HEARTBEAT_EVENT);        // 设置请求类型为：心跳
+                        channel.send(req);                            // 从Provider返回的数据会更新 lastRead, lastWrite的时间
                         if (logger.isDebugEnabled()) {
                             logger.debug("Send heartbeat to remote channel " + channel.getRemoteAddress()
                                     + ", cause: The channel has no data-transmission exceeds a heartbeat period: " + heartbeat + "ms");
                         }
                     }
-                    // 最后读的时间，超过心跳超时时间
+                    // 最后读的时间，超过心跳超时时间; 也就是说发送了心跳但是没有得到响应
                     if (lastRead != null && now - lastRead > heartbeatTimeout) {
-                        logger.warn("Close channel " + channel
-                                + ", because heartbeat read idle time out: " + heartbeatTimeout + "ms");
+                        logger.warn("Close channel " + channel + ", because heartbeat read idle time out: " + heartbeatTimeout + "ms");
                         // 客户端侧，重新连接服务端
                         if (channel instanceof Client) {
                             try {

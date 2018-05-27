@@ -61,7 +61,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
         this.handler = handler;
         this.url = url;
 
-        // 创建线程池
+        // 创建线程池，Consumer在之前已经设置了threadpool=cached,  Provider不确定
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
 
         // 添加线程池到 DataStore 中

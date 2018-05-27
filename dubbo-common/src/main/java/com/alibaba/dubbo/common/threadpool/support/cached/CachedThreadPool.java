@@ -40,22 +40,20 @@ public class CachedThreadPool implements ThreadPool {
 
     @Override
     public Executor getExecutor(URL url) {
-        // 线程名
+        // 线程名, :"DubboClientHandler-127.0.0.1"
         String name = url.getParameter(Constants.THREAD_NAME_KEY, Constants.DEFAULT_THREAD_NAME);
-        // 核心线程数
+        // 核心线程数 : 0
         int cores = url.getParameter(Constants.CORE_THREADS_KEY, Constants.DEFAULT_CORE_THREADS);
         // 最大线程数
         int threads = url.getParameter(Constants.THREADS_KEY, Integer.MAX_VALUE);
-        // 队列数
+        // 队列数 : 0
         int queues = url.getParameter(Constants.QUEUES_KEY, Constants.DEFAULT_QUEUES);
-        // 线程存活时长
+        // 线程存活时长 : 60 * 1000
         int alive = url.getParameter(Constants.ALIVE_KEY, Constants.DEFAULT_ALIVE);
         // 创建执行器
         return new ThreadPoolExecutor(cores, threads, alive, TimeUnit.MILLISECONDS,
-                queues == 0 ? new SynchronousQueue<Runnable>() :
-                        (queues < 0 ? new LinkedBlockingQueue<Runnable>()
-                                : new LinkedBlockingQueue<Runnable>(queues)),
-                new NamedThreadFactory(name, true), new AbortPolicyWithReport(name, url));
+            queues == 0 ? new SynchronousQueue<Runnable>() : (queues < 0 ? new LinkedBlockingQueue<Runnable>() : new LinkedBlockingQueue<Runnable>(queues)),
+            new NamedThreadFactory(name, true), new AbortPolicyWithReport(name, url));
     }
 
 }

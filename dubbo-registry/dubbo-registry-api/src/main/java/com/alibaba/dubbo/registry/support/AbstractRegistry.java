@@ -148,7 +148,7 @@ public abstract class AbstractRegistry implements Registry {
         // 加载本地磁盘缓存文件到内存缓存
         loadProperties();
         // 通知监听器，URL 变化结果
-        notify(url.getBackupUrls()); // 【TODO 8020】为什么构造方法，要通知，连监听器都没注册
+        notify(url.getBackupUrls()); // 通知备份的zookeeper服务器,数据的第一位是实际注册的url
     }
 
     protected static List<URL> filterEmpty(URL url, List<URL> urls) {
@@ -507,7 +507,7 @@ public abstract class AbstractRegistry implements Registry {
                 List<URL> categoryList = result.get(category);
                 if (categoryList == null) {
                     categoryList = new ArrayList<URL>();
-                    result.put(category, categoryList);
+                    result.put(category, categoryList);               // category >> 相应的urls
                 }
                 categoryList.add(u);
             }

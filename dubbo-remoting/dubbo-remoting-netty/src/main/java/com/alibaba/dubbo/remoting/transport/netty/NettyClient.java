@@ -29,10 +29,12 @@ import com.alibaba.dubbo.remoting.transport.AbstractClient;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelDownstreamHandler;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
@@ -83,7 +85,10 @@ public class NettyClient extends AbstractClient {
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("connectTimeoutMillis", getTimeout());
 
-        // 创建 NettyHandler 对象
+        /**创建 NettyHandler 对象,其作为Netty的一个ChannelHandler，参与Channel内数据的处理
+         * NettyHandler extends {@link org.jboss.netty.channel.SimpleChannelHandler} , 间接实现了 {@link ChannelUpstreamHandler},{@link ChannelDownstreamHandler}
+         * ##################### 其将Netty的Channel里获取到的数据导入Dubbo体系中,至关重要 #####################
+         */
         final NettyHandler nettyHandler = new NettyHandler(getUrl(), this);
 
         // 设置责任链路
@@ -93,9 +98,10 @@ public class NettyClient extends AbstractClient {
                 // 创建 NettyCodecAdapter 对象
                 NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
                 ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("decoder", adapter.getDecoder());  // 解码
-                pipeline.addLast("encoder", adapter.getEncoder());  // 编码
-                pipeline.addLast("handler", nettyHandler);          // 处理器  , 将自身作为Netty的一个ChannelHandler, 用于处理数据的交互
+                pipeline.addLast("decoder", adapter.getDecoder());  // 解码 ChannelHandler
+                pipeline.addLast("encoder", adapter.getEncoder());  // 编码 ChannelHandler
+                //  ##################### 处理器  , 将自身作为Netty的一个ChannelHandler, 用于处理数据的交互  #####################
+                pipeline.addLast("handler", nettyHandler);
                 return pipeline;
             }
         });

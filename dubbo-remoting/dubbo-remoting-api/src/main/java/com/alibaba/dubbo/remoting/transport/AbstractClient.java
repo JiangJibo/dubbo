@@ -30,7 +30,10 @@ import com.alibaba.dubbo.remoting.Channel;
 import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.Client;
 import com.alibaba.dubbo.remoting.RemotingException;
+import com.alibaba.dubbo.remoting.exchange.support.header.HeartbeatHandler;
 import com.alibaba.dubbo.remoting.transport.dispatcher.ChannelHandlers;
+import com.alibaba.dubbo.remoting.transport.dispatcher.all.AllChannelHandler;
+import com.alibaba.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -155,12 +158,12 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
      *
      * @param url URL
      * @param handler 被包装的通道处理器
-     * @return 包装后的通道处理器
+     * @return 包装后的通道处理器 {@link MultiMessageHandler} 内部包装一个 {@link HeartbeatHandler}, 内部包装了{@link AllChannelHandler}
      */
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
-        // 设置线程名
+        // 设置线程名 ,   ...&threadname="DubboClientHandler-127.0.0.1"
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
-        // 设置使用的线程池类型
+        // 设置使用的线程池类型 ,   ...&threadpool=cached
         url = url.addParameterIfAbsent(Constants.THREADPOOL_KEY, Constants.DEFAULT_CLIENT_THREADPOOL);
         // 包装通道处理器
         return ChannelHandlers.wrap(handler, url);

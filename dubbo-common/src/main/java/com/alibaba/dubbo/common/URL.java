@@ -399,7 +399,7 @@ public final class URL implements Serializable {
 
     public List<URL> getBackupUrls() {
         List<URL> urls = new ArrayList<URL>();
-        urls.add(this);
+        urls.add(this);                           // 先加上自身
         String[] backups = getParameter(Constants.BACKUP_KEY, new String[0]);
         if (backups != null && backups.length > 0) {
             for (String backup : backups) {
