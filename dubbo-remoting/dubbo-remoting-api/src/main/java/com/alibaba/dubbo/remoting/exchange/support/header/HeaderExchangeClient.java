@@ -82,9 +82,9 @@ public class HeaderExchangeClient implements ExchangeClient {
         // 创建 HeaderExchangeChannel 对象
         this.channel = new HeaderExchangeChannel(client);
         // 读取心跳相关配置
-        String dubbo = client.getUrl().getParameter(Constants.DUBBO_VERSION_KEY);
+        String dubboVersion = client.getUrl().getParameter(Constants.DUBBO_VERSION_KEY);
         // 默认心跳间隔，前面设置过了，60*1000
-        this.heartbeat = client.getUrl().getParameter(Constants.HEARTBEAT_KEY, dubbo != null && dubbo.startsWith("1.0.") ? Constants.DEFAULT_HEARTBEAT : 0);
+        this.heartbeat = client.getUrl().getParameter(Constants.HEARTBEAT_KEY, dubboVersion != null && dubboVersion.startsWith("1.0.") ? Constants.DEFAULT_HEARTBEAT : 0);
         this.heartbeatTimeout = client.getUrl().getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);
         if (heartbeatTimeout < heartbeat * 2) { // 避免间隔太短
             throw new IllegalStateException("heartbeatTimeout < heartbeatInterval * 2");
@@ -217,6 +217,7 @@ public class HeaderExchangeClient implements ExchangeClient {
                 new HeartBeatTask(new HeartBeatTask.ChannelProvider() {
                     @Override
                     public Collection<Channel> getChannels() {
+                        // 将自身传入心跳线程任务中,当心跳超时,关闭持有的Channel或者定时重连
                         return Collections.<Channel>singletonList(HeaderExchangeClient.this);
                     }
                 }, heartbeat, heartbeatTimeout),

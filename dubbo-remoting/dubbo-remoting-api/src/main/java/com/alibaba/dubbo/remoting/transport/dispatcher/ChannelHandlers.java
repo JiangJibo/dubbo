@@ -48,11 +48,17 @@ public class ChannelHandlers {
         INSTANCE = instance;
     }
 
+    /**
+     * @param handler
+     * @param url
+     * @return
+     */
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
-        return new MultiMessageHandler(
-            // String extName = url.getParameter("dispatcher", url.getParameter("dispather", url.getParameter("channel.handler", "all")));
-            new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class).getAdaptiveExtension().dispatch(handler, url))
-        );
+        /** String extName = url.getParameter("dispatcher", url.getParameter("dispather", url.getParameter("channel.handler", "all")));
+         *  all >> {@link AllChannelHandler}
+         */
+        ChannelHandler all = ExtensionLoader.getExtensionLoader(Dispatcher.class).getAdaptiveExtension().dispatch(handler, url);
+        return new MultiMessageHandler(new HeartbeatHandler(all));
     }
 
 }

@@ -30,6 +30,7 @@ import com.alibaba.dubbo.remoting.Channel;
 import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.Client;
 import com.alibaba.dubbo.remoting.RemotingException;
+import com.alibaba.dubbo.remoting.exchange.support.header.HeaderExchangeHandler;
 import com.alibaba.dubbo.remoting.exchange.support.header.HeartbeatHandler;
 import com.alibaba.dubbo.remoting.transport.dispatcher.ChannelHandlers;
 import com.alibaba.dubbo.remoting.transport.dispatcher.all.AllChannelHandler;
@@ -63,7 +64,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     /**
      * 重连定时任务执行器
      */
-    private static final ScheduledThreadPoolExecutor reconnectExecutorService = new ScheduledThreadPoolExecutor(2, new NamedThreadFactory("DubboClientReconnectTimer", true));
+    private static final ScheduledThreadPoolExecutor reconnectExecutorService = new ScheduledThreadPoolExecutor(2,
+        new NamedThreadFactory("DubboClientReconnectTimer", true));
     /**
      * 连接锁，用于实现发起连接和断开连接互斥，避免并发。
      */
@@ -120,8 +122,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         } catch (Throwable t) {
             close(); // 失败，则关闭
             throw new RemotingException(url.toInetSocketAddress(), null,
-                    "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
-                            + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
+                "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
+                    + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
 
         // 连接服务器
@@ -137,31 +139,32 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                 throw t;
             } else {
                 logger.warn("Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
-                        + " connect to the server " + getRemoteAddress() + " (check == false, ignore and retry later!), cause: " + t.getMessage(), t);
+                    + " connect to the server " + getRemoteAddress() + " (check == false, ignore and retry later!), cause: " + t.getMessage(), t);
             }
         } catch (Throwable t) {
             close(); // 失败，则关闭
             throw new RemotingException(url.toInetSocketAddress(), null,
-                    "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
-                            + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
+                "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
+                    + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
 
         // 获得线程池
-        executor = (ExecutorService) ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension()
-                .get(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+        executor = (ExecutorService)ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension()
+            .get(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
         ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension()
-                .remove(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+            .remove(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
     }
 
     /**
-     * 包装通道处理器
+     * 包装通道处理器,封装层级:
+     * MultiMessageHandler >> HeartbeatHandler >> AllChannelHandler >> DecodeHandler >> HeaderExchangeHandler >> requestHandler
      *
-     * @param url URL
+     * @param url     URL {@link DecodeHandler} 封装  {@link HeaderExchangeHandler} 封装 {@link DubboProtocol#requestHandler}
      * @param handler 被包装的通道处理器
      * @return 包装后的通道处理器 {@link MultiMessageHandler} 内部包装一个 {@link HeartbeatHandler}, 内部包装了{@link AllChannelHandler}
      */
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
-        // 设置线程名 ,   ...&threadname="DubboClientHandler-127.0.0.1"
+        // 设置线程名 ,   ...&threadname="DubboClientHandler-127.0.0.1:2181"
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
         // 设置使用的线程池类型 ,   ...&threadpool=cached
         url = url.addParameterIfAbsent(Constants.THREADPOOL_KEY, Constants.DEFAULT_CLIENT_THREADPOOL);
@@ -213,7 +216,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                         // 未连接，重连
                         if (!isConnected()) {
                             connect();
-                        // 已连接，记录最后连接时间
+                            // 已连接，记录最后连接时间
                         } else {
                             lastConnectedTime = System.currentTimeMillis();
                         }
@@ -259,7 +262,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     // 未调用
     protected ExecutorService createExecutor() {
-        return Executors.newCachedThreadPool(new NamedThreadFactory(CLIENT_THREAD_POOL_NAME + CLIENT_THREAD_POOL_ID.incrementAndGet() + "-" + getUrl().getAddress(), true));
+        return Executors.newCachedThreadPool(
+            new NamedThreadFactory(CLIENT_THREAD_POOL_NAME + CLIENT_THREAD_POOL_ID.incrementAndGet() + "-" + getUrl().getAddress(), true));
     }
 
     public InetSocketAddress getConnectAddress() {
@@ -269,16 +273,14 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     @Override
     public InetSocketAddress getRemoteAddress() {
         Channel channel = getChannel();
-        if (channel == null)
-            return getUrl().toInetSocketAddress();
+        if (channel == null) { return getUrl().toInetSocketAddress(); }
         return channel.getRemoteAddress();
     }
 
     @Override
     public InetSocketAddress getLocalAddress() {
         Channel channel = getChannel();
-        if (channel == null)
-            return InetSocketAddress.createUnresolved(NetUtils.getLocalHost(), 0);
+        if (channel == null) { return InetSocketAddress.createUnresolved(NetUtils.getLocalHost(), 0); }
         return channel.getLocalAddress();
     }
 
@@ -291,24 +293,21 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     @Override
     public Object getAttribute(String key) {
         Channel channel = getChannel();
-        if (channel == null)
-            return null;
+        if (channel == null) { return null; }
         return channel.getAttribute(key);
     }
 
     @Override
     public void setAttribute(String key, Object value) {
         Channel channel = getChannel();
-        if (channel == null)
-            return;
+        if (channel == null) { return; }
         channel.setAttribute(key, value);
     }
 
     @Override
     public void removeAttribute(String key) {
         Channel channel = getChannel();
-        if (channel == null)
-            return;
+        if (channel == null) { return; }
         channel.removeAttribute(key);
     }
 
@@ -348,14 +347,14 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             // 连接失败，抛出异常
             if (!isConnected()) {
                 throw new RemotingException(this, "Failed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
-                        + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
-                        + ", cause: Connect wait timeout: " + getTimeout() + "ms.");
-            // 连接成功，打印日志
+                    + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
+                    + ", cause: Connect wait timeout: " + getTimeout() + "ms.");
+                // 连接成功，打印日志
             } else {
                 if (logger.isInfoEnabled()) {
                     logger.info("Successed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
-                            + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
-                            + ", channel is " + this.getChannel());
+                        + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
+                        + ", channel is " + this.getChannel());
                 }
             }
             // 设置重连次数归零
@@ -366,8 +365,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             throw e;
         } catch (Throwable e) {
             throw new RemotingException(this, "Failed connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
-                    + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
-                    + ", cause: " + e.getMessage(), e);
+                + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion()
+                + ", cause: " + e.getMessage(), e);
         } finally {
             // 释放锁
             connectLock.unlock();

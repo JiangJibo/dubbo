@@ -81,6 +81,9 @@ public class Transporters {
         return getTransporter().connect(url, handler);
     }
 
+    /**
+     * @return {@link NettyTransporter}
+     */
     public static Transporter getTransporter() {
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }

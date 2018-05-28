@@ -22,6 +22,8 @@ import com.alibaba.dubbo.remoting.Client;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.Server;
 import com.alibaba.dubbo.remoting.Transporter;
+import com.alibaba.dubbo.remoting.exchange.support.header.HeaderExchangeHandler;
+import com.alibaba.dubbo.remoting.transport.DecodeHandler;
 
 public class NettyTransporter implements Transporter {
 
@@ -31,6 +33,15 @@ public class NettyTransporter implements Transporter {
         return new NettyServer(url, listener);
     }
 
+    /**
+     * 创建Client, 连接Server,创建Channel,维护长连接
+     *
+     * @param url      server url 服务器地址
+     * @param listener {@link DecodeHandler} 封装  {@link HeaderExchangeHandler}
+     * @return
+     * @throws RemotingException
+     */
+    @Override
     public Client connect(URL url, ChannelHandler listener) throws RemotingException {
         return new NettyClient(url, listener);
     }

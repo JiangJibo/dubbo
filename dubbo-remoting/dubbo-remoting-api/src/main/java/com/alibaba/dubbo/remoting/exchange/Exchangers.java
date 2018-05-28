@@ -24,6 +24,8 @@ import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.exchange.support.ExchangeHandlerDispatcher;
 import com.alibaba.dubbo.remoting.exchange.support.Replier;
+import com.alibaba.dubbo.remoting.exchange.support.header.HeaderExchangeClient;
+import com.alibaba.dubbo.remoting.exchange.support.header.HeaderExchanger;
 import com.alibaba.dubbo.remoting.transport.ChannelHandlerAdapter;
 
 /**
@@ -100,6 +102,12 @@ public class Exchangers {
         return connect(URL.valueOf(url), handler);
     }
 
+    /**
+     * @param url
+     * @param handler {@link DubboProtocol#requestHandler}
+     * @return {@link HeaderExchangeClient}, 也就是生成Consumer客户端 Client
+     * @throws RemotingException
+     */
     public static ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -108,14 +116,31 @@ public class Exchangers {
             throw new IllegalArgumentException("handler == null");
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+        /**
+         *  {@link HeaderExchanger#connect(URL, ExchangeHandler)}
+         */
         return getExchanger(url).connect(url, handler);
     }
 
+    /**
+     * 一般返回 {@link HeaderExchanger}
+     *
+     * @param url
+     * @return {@link HeaderExchanger}
+     */
     public static Exchanger getExchanger(URL url) {
+        // 默认值 "header"
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
         return getExchanger(type);
     }
 
+    /**
+     * 根据参数指定转换器，转换器的作用是根据{@link URL}和 {@link ExchangeHandler} 生成 {@link ExchangeServer} 或者 {@link ExchangeClient}
+     * 也就是生成一个Provider客户端(Server) 还是 Consumer客户端(Client)
+     *
+     * @param type "header"
+     * @return {@link HeaderExchanger}
+     */
     public static Exchanger getExchanger(String type) {
         return ExtensionLoader.getExtensionLoader(Exchanger.class).getExtension(type);
     }

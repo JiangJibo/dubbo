@@ -17,7 +17,9 @@
 package com.alibaba.dubbo.remoting.exchange.support.header;
 
 import com.alibaba.dubbo.common.URL;
+import com.alibaba.dubbo.remoting.Client;
 import com.alibaba.dubbo.remoting.RemotingException;
+import com.alibaba.dubbo.remoting.Server;
 import com.alibaba.dubbo.remoting.Transporters;
 import com.alibaba.dubbo.remoting.exchange.ExchangeClient;
 import com.alibaba.dubbo.remoting.exchange.ExchangeHandler;
@@ -34,14 +36,30 @@ public class HeaderExchanger implements Exchanger {
 
     public static final String NAME = "header";
 
+    /**
+     * @param url     server url 服务器地址
+     * @param handler 数据交换处理器  {@link DubboProtocol#requestHandler}
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
-        return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
+        // 默认返回 NettyClient
+        Client client = Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler)));
+        return new HeaderExchangeClient(client, true);
     }
 
+    /**
+     * @param url     server url
+     * @param handler 数据交换处理器
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
-        return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
+        // 默认返回 NettyServer
+        Server server = Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler)));
+        return new HeaderExchangeServer(server);
     }
 
 }

@@ -50,6 +50,9 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     private final ExchangeHandler handler;
 
+    /**
+     * @param handler 当为Client时，{@link DubboProtocol#requestHandler}
+     */
     public HeaderExchangeHandler(ExchangeHandler handler) {
         if (handler == null) {
             throw new IllegalArgumentException("handler == null");
