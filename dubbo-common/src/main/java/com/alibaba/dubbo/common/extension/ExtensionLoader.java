@@ -495,8 +495,7 @@ public class ExtensionLoader<T> {
      */
     public T getDefaultExtension() {
         getExtensionClasses();
-        if (null == cachedDefaultName || cachedDefaultName.length() == 0
-            || "true".equals(cachedDefaultName)) { // 如果为 true ，不能继续调用 `#getExtension(true)` 方法，会形成死循环。
+        if (null == cachedDefaultName || cachedDefaultName.length() == 0 || "true".equals(cachedDefaultName)) { // 如果为 true ，不能继续调用 `#getExtension(true)` 方法，会形成死循环。
             return null;
         }
         return getExtension(cachedDefaultName);

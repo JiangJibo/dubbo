@@ -148,19 +148,17 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                     + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
 
-        // 获得线程池
-        executor = (ExecutorService)ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension()
-            .get(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
-        ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension()
-            .remove(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+        // 获得线程池, 缓存线程池实例
+        executor = (ExecutorService)ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension().get(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
+        ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension().remove(Constants.CONSUMER_SIDE, Integer.toString(url.getPort()));
     }
 
     /**
      * 包装通道处理器,封装层级:
      * MultiMessageHandler >> HeartbeatHandler >> AllChannelHandler >> DecodeHandler >> HeaderExchangeHandler >> requestHandler
      *
-     * @param url     URL {@link DecodeHandler} 封装  {@link HeaderExchangeHandler} 封装 {@link DubboProtocol#requestHandler}
-     * @param handler 被包装的通道处理器
+     * @param url     URL
+     * @param handler 被包装的通道处理器  {@link DecodeHandler} 封装  {@link HeaderExchangeHandler} 封装 {@link DubboProtocol#requestHandler}
      * @return 包装后的通道处理器 {@link MultiMessageHandler} 内部包装一个 {@link HeartbeatHandler}, 内部包装了{@link AllChannelHandler}
      */
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {

@@ -65,8 +65,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 监听器集合
      */
-    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners
-        = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
+    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
     /**
      * Zookeeper 客户端
      */
@@ -227,7 +226,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
                 }
-                // 首次全量数据获取完成时，调用 `#notify(...)` 方法，回调 NotifyListener
+                // 首次全量数据获取完成时，调用 `#notify(...)` 方法，回调 NotifyListener, 在这一步从连接Provider,实例化Invoker
                 notify(url, listener, urls);
             }
         } catch (Throwable e) {
