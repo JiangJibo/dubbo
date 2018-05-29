@@ -100,17 +100,22 @@ public class NettyClient extends AbstractClient {
                 ChannelPipeline pipeline = Channels.pipeline();
                 pipeline.addLast("decoder", adapter.getDecoder());  // 解码 ChannelHandler
                 pipeline.addLast("encoder", adapter.getEncoder());  // 编码 ChannelHandler
-                //  ##################### 处理器  , 将自身作为Netty的一个ChannelHandler, 用于处理数据的交互  #####################
+                //  ##################### 处理器  , 将NettyHandler(url,this)作为Netty的一个ChannelHandler, 用于处理数据的交互  #####################
                 pipeline.addLast("handler", nettyHandler);
                 return pipeline;
             }
         });
     }
 
+    /**
+     * 执行连接工作,生成{@link Channel} 数据通道
+     *
+     * @throws Throwable
+     */
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
-        // 连接服务器
+        // 连接服务器,也就是连接Provider; 连接时仅有IP地址和端口起作用
         ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
             // 等待连接成功或者超时
@@ -118,6 +123,7 @@ public class NettyClient extends AbstractClient {
             // 连接成功
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.getChannel();
+                // 设置Channel仅对可读和可写事件感兴趣 , operation_read || operation_write
                 newChannel.setInterestOps(Channel.OP_READ_WRITE);
                 try {
                     // 关闭老的连接
@@ -187,6 +193,11 @@ public class NettyClient extends AbstractClient {
         }*/
     }
 
+    /**
+     * 将 {@link #channel} 封装成Dubbo提起内的Channel {@link NettyChannel}
+     *
+     * @return
+     */
     @Override
     protected com.alibaba.dubbo.remoting.Channel getChannel() {
         Channel c = channel;

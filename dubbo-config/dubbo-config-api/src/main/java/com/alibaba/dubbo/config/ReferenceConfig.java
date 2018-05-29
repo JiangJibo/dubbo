@@ -470,7 +470,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     for (String u : us) {
                         // 创建 URL 对象
                         URL url = URL.valueOf(u);
-                        // 设置默认路径
+                        // 设置默认路径,path设置为接口名称
                         if (url.getPath() == null || url.getPath().length() == 0) {
                             url = url.setPath(interfaceName);
                         }
@@ -486,7 +486,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
             } else {
                 // assemble URL from register center's configuration
-                // 加载注册中心 URL 数组,如果指定了多个注册中心,那么就会返回多个URL
+                // 加载注册中心 URL 数组,如果指定了多个注册中心,那么就会返回多个URL,每个url包含当前对象的参数
                 List<URL> us = loadRegistries(false);
                 // 循环数组，添加到 `url` 中。
                 if (us != null && !us.isEmpty()) {

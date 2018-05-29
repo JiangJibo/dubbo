@@ -77,7 +77,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
-        // 创建 Client 对象
+        // 创建 Client 对象 : NettyTransporter
         return getTransporter().connect(url, handler);
     }
 

@@ -126,7 +126,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                     + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
 
-        // 连接服务器
+        /** 连接服务器,生成org.jboss.netty.channel.Channel, 封装成{@link NettyChannel} */
         try {
             // connect.
             connect();
@@ -211,6 +211,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         if (reconnect > 0 && (reconnectExecutorFuture == null || reconnectExecutorFuture.isCancelled())) {
             // 创建 Runnable 对象
             Runnable connectStatusCheckCommand = new Runnable() {
+                @Override
                 public void run() {
                     try {
                         // 未连接，重连
@@ -286,6 +287,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     @Override
     public boolean isConnected() {
+        /**
+         * 将 Netty 的 {@link org.jboss.netty.channel.Channel} 转换为 {@link NettyChannel}
+         */
         Channel channel = getChannel();
         return channel != null && channel.isConnected();
     }
@@ -332,6 +336,11 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         channel.send(message, sent);
     }
 
+    /**
+     * 在创建NettyClient是就尝试连接
+     *
+     * @throws RemotingException
+     */
     protected void connect() throws RemotingException {
         // 获得锁
         connectLock.lock();
@@ -342,7 +351,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             }
             // 初始化重连线程
             initConnectStatusCheckCommand();
-            // 执行连接
+            /** 执行连接,连接服务器,创建{@link org.jboss.netty.channel} , 赋值给 {@link NettyClient#channel }*/
             doConnect();
             // 连接失败，抛出异常
             if (!isConnected()) {

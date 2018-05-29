@@ -40,14 +40,16 @@ public class NettyHandler extends SimpleChannelHandler {
 
     /**
      * Dubbo Channel 集合
+     * <ip:port, channel>
      */
-    private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>(); // <ip:port, channel>
+    private final Map<String, Channel> channels = new ConcurrentHashMap<String, Channel>();
     /**
      * URL
      */
     private final URL url;
     /**
-     * Dubbo ChannelHandler
+     * 属性类型为：NettyClient, 当前对象的很多行为转发到 {@link NettyClient}
+     * NettyClient将部分行为转发给其持有的{@link NettyClient#getChannelHandler()}
      */
     private final ChannelHandler handler;
 
@@ -73,9 +75,9 @@ public class NettyHandler extends SimpleChannelHandler {
         try {
             // 添加到 `channels` 中
             if (channel != null) {
-                channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.getChannel().getRemoteAddress()), channel);
+                channels.put(NetUtils.toAddressString((InetSocketAddress)ctx.getChannel().getRemoteAddress()), channel);
             }
-            // 提交给 `handler` 处理器。
+            // 提交给 `NettyClient(superClass AbstractPeer)` 处理器。
             handler.connected(channel);
         } finally {
             // 移除 NettyChannel 对象，若已断开
@@ -87,7 +89,7 @@ public class NettyHandler extends SimpleChannelHandler {
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
-            channels.remove(NetUtils.toAddressString((InetSocketAddress) ctx.getChannel().getRemoteAddress()));
+            channels.remove(NetUtils.toAddressString((InetSocketAddress)ctx.getChannel().getRemoteAddress()));
             handler.disconnected(channel);
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.getChannel());

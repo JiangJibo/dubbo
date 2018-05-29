@@ -230,7 +230,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                             map.put("protocol", "dubbo");
                         }
                     }
-                    // 解析地址，创建 Dubbo URL 数组。（数组大小可以为一）
+                    // 解析地址，创建 Dubbo URL 数组。（数组大小可以为一）,同时将map内的参数填充入每个url
                     List<URL> urls = UrlUtils.parseURLs(address, map);
                     // 循环 `url` ，设置 "registry" 和 "protocol" 属性。
                     for (URL url : urls) {
