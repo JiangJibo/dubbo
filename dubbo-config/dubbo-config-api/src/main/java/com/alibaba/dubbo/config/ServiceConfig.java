@@ -889,8 +889,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      */
     private void checkProtocol() {
         // 当 ProtocolConfig 对象数组为空时，优先使用 `ProviderConfig.protocols` 。其次，进行创建。
-        if ((protocols == null || protocols.isEmpty())
-                && provider != null) {
+        if ((protocols == null || protocols.isEmpty()) && provider != null) {
             setProtocols(provider.getProtocols());
         }
         // backward compatibility 向后兼容
@@ -900,6 +899,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         // 拼接属性配置（环境变量 + properties 属性）到 ProtocolConfig 对象数组
         for (ProtocolConfig protocolConfig : protocols) {
             if (StringUtils.isEmpty(protocolConfig.getName())) {
+                // 未指定protocol时, 默认值为 "dubbo"
                 protocolConfig.setName("dubbo");
             }
             appendProperties(protocolConfig);

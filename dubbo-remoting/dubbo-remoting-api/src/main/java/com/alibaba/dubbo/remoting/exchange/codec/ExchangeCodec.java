@@ -86,6 +86,14 @@ public class ExchangeCodec extends TelnetCodec {
         return decode(channel, buffer, readable, header);
     }
 
+    /**
+     * @param channel
+     * @param buffer
+     * @param readable 可读取长度
+     * @param header  数据头部
+     * @return
+     * @throws IOException
+     */
     @Override
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
         // 非 Dubbo 协议，目前是 Telnet 命令。

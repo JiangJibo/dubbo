@@ -76,6 +76,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (ret == null) {
             ret = new HeaderExchangeChannel(ch);
             if (ch.isConnected()) { // 已连接
+                // 将Channel设置入ExchangeChannel中
                 ch.setAttribute(CHANNEL_KEY, ret);
             }
         }
