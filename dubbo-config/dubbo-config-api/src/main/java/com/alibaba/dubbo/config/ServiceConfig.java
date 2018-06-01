@@ -595,7 +595,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             contextPath = provider.getContextpath();
         }
 
-        // host、port
+        // 获取本机开放给Client的IP和地址
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
 
@@ -723,7 +723,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             if (provider != null && (hostToBind == null || hostToBind.length() == 0)) {
                 hostToBind = provider.getHost();
             }
-            // 第三优先级，若非合法的本地 Host ，使用 InetAddress.getLocalHost().getHostAddress() 获得 Host
+            // 第三优先级，若非合法的本地 Host ，使用 InetAddress.getLocalHost().getHostAddress() 获得 Host , 127.0.0.1
             if (isInvalidLocalHost(hostToBind)) {
                 anyhost = true;
                 try {
@@ -802,7 +802,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             if (provider != null && (portToBind == null || portToBind == 0)) {
                 portToBind = provider.getPort();
             }
-            // 第三优先级，获得协议对应的缺省端口，
+            // 第三优先级，获得协议对应的缺省端口，20080
             final int defaultPort = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).getDefaultPort();
             if (portToBind == null || portToBind == 0) {
                 portToBind = defaultPort;
