@@ -65,7 +65,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * 监听器集合
      */
-    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
+    private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners
+        = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
     /**
      * Zookeeper 客户端
      */
@@ -164,16 +165,18 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
                 // 获得 ChildListener 对象
                 ChildListener zkListener = listeners.get(listener);
-                if (zkListener == null) { // 不存在 ChildListener 对象，进行创建 ChildListener 对象
+                if (zkListener == null) { // 不存在子目录的监听器，进行创建 ChildListener 对象
+                    // 订阅父级目录, 当有子节点发生变化时，触发此回调函数
                     listeners.putIfAbsent(listener, new ChildListener() {
+                        @Override
                         public void childChanged(String parentPath, List<String> currentChilds) {
                             for (String child : currentChilds) {
                                 child = URL.decode(child);
                                 // 新增 Service 接口全名时（即新增服务），发起该 Service 层的订阅
                                 if (!anyServices.contains(child)) {
                                     anyServices.add(child);
-                                    subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child,
-                                        Constants.CHECK_KEY, String.valueOf(false)), listener);
+                                    subscribe(url.setPath(child).addParameters(Constants.INTERFACE_KEY, child, Constants.CHECK_KEY, String.valueOf(false)),
+                                        listener);
                                 }
                             }
                         }
@@ -207,7 +210,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                     // 获得 ChildListener 对象
                     ChildListener zkListener = listeners.get(listener);
-                    if (zkListener == null) { // 不存在 ChildListener 对象，进行创建 ChildListener 对象
+                    if (zkListener == null) { //  不存在子目录的监听器，进行创建 ChildListener 对象
+                        // 订阅父级目录, 当有子节点发生变化时，触发此回调函数
                         listeners.putIfAbsent(listener, new ChildListener() {
                             @Override
                             public void childChanged(String parentPath, List<String> currentChilds) {
@@ -310,7 +314,6 @@ public class ZookeeperRegistry extends FailbackRegistry {
      * 获得分类路径数组
      *
      * Root + Service + Type : /dubbo/com.bob.service.CityService/providers, /dubbo/com.bob.service.CityService/consumers
-     *
      *
      * @param url URL
      * @return 分类路径数组

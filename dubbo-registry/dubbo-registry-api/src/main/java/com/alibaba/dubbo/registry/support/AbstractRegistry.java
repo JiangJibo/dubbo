@@ -475,7 +475,7 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     /**
-     * 通知监听器，URL 变化结果。
+     * 通知监听器，URL 变化结果。当Zookeeper里的节点发生变化时,Dubbo注册了监听器,到时候会回调此函数
      *
      * 数据流向 `urls` => {@link #notified} => {@link #properties} => {@link #file}
      *
@@ -530,7 +530,7 @@ public abstract class AbstractRegistry implements Registry {
             categoryNotified.put(category, categoryList);
             // 保存到文件
             saveProperties(url);
-            // 通知监听器
+            // 通知监听器, 最终会调用RegistryDirectory#notify(List<URL>)
             listener.notify(categoryList);
         }
     }

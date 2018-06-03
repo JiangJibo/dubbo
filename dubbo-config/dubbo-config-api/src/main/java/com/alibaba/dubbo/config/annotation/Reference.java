@@ -53,14 +53,17 @@ public @interface Reference {
     String interfaceName() default "";
 
     /**
-     * 版本号
+     * 版本号, 一个接口的实现可以有多个版本,调用时会选择对应的版本 ; 不区分版本用 *
+     * 在低压力时间段，先升级一半提供者为新版本
+     * 再将所有消费者升级为新版本
+     * 然后将剩下的一半提供者升级为新版本
      *
      * @return
      */
     String version() default "";
 
     /**
-     * 分组
+     * 分组, 一个接口有多个实现时,指定不同的分组, 任意分组用 "*"
      *
      * @return
      */

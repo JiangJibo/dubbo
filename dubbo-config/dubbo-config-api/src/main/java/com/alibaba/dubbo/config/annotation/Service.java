@@ -55,6 +55,11 @@ public @interface Service {
      */
     String version() default "";
 
+    /**
+     * 当一个接口有多个实现时，用group指定相应的实现类
+     *
+     * @return
+     */
     String group() default "";
 
     String path() default "";

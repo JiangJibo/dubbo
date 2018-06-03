@@ -318,7 +318,7 @@ public class RegistryProtocol implements Protocol {
 
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-        // 获得真实的注册中心的 URL
+        // 获得真实的注册中心的 URL, 还原protocol的设置。已经进入了此注册器，不需要再用protocol的设置了
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
         // 通过RegistryFactory$Adaptive 获取 ZookeeperRegistryFactory
         // 获得注册中心,第一次会连接zookeeper，创建 {@link ZooKeeperClient},生成{@link ZookeeperRegistry}
