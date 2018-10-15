@@ -82,7 +82,7 @@ public class NettyServer extends AbstractServer implements Server {
         // 创建线程组
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
         workerGroup = new NioEventLoopGroup(getUrl().getPositiveParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
-                new DefaultThreadFactory("NettyServerWorker", true));
+            new DefaultThreadFactory("NettyServerWorker", true));
 
         // 创建 NettyServerHandler 对象
         final NettyServerHandler nettyServerHandler = new NettyServerHandler(getUrl(), this);
@@ -90,26 +90,24 @@ public class NettyServer extends AbstractServer implements Server {
         channels = nettyServerHandler.getChannels();
 
         bootstrap
-                // 设置它的线程组
-                .group(bossGroup, workerGroup)
-                // 设置 Channel类型
-                .channel(NioServerSocketChannel.class) // Server
-                // 设置可选项
-                .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-                .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                // 设置责任链路
-                .childHandler(new ChannelInitializer<NioSocketChannel>() {
-                    @Override
-                    protected void initChannel(NioSocketChannel ch) {
-                        // 创建 NettyCodecAdapter 对象
-                        NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
-                        ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
-                                .addLast("decoder", adapter.getDecoder()) // 解码
-                                .addLast("encoder", adapter.getEncoder())  // 解码
-                                .addLast("handler", nettyServerHandler); // 处理器
-                    }
-                });
+            // 设置它的线程组
+            .group(bossGroup, workerGroup)
+            .channel(NioServerSocketChannel.class) // 设置 Channel类型
+            .childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE)  //禁用Nagle算法,发送小包无延迟,
+            .childOption(ChannelOption.SO_REUSEADDR, Boolean.TRUE) // 可以对一个端口进行多次绑定,每个Invoker会执行一次绑定
+            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT) // 使用池化的内存空间分配器,提高内存的利用效率
+            // 设置责任链路
+            .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                @Override
+                protected void initChannel(NioSocketChannel ch) {
+                    // 创建 NettyCodecAdapter 对象
+                    NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
+                    ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
+                        .addLast("decoder", adapter.getDecoder()) // 编码
+                        .addLast("encoder", adapter.getEncoder())  // 解码
+                        .addLast("handler", nettyServerHandler); // 处理器
+                }
+            });
 
         // 服务器绑定端口监听
         // bind

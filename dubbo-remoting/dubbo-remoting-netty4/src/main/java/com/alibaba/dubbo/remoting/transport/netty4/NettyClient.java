@@ -46,7 +46,7 @@ public class NettyClient extends AbstractClient {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
 
-    // 【TODO 8027】为啥公用
+    // 所有Client共用一个 EventLoopGroup
     private static final NioEventLoopGroup nioEventLoopGroup = new NioEventLoopGroup(Constants.DEFAULT_IO_THREADS, new DefaultThreadFactory("NettyClientWorker", true));
 
     private Bootstrap bootstrap;
